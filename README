@@ -1,0 +1,29 @@
+VicBot
+======
+
+A chatbot/logger for Wikia Chats
+
+Installation:
+* Install Python
+* Get pip
+* Install requests
+* Set your bot's username, password and the wiki you wish to connect on vicbot.py and command.py
+* Run vicbot.py
+
+Commands:
+* /hon
+* /hoff
+* /yton
+* /ytoff
+* /lon
+* /loff
+* /seenon
+* /seenoff
+* /hello
+* /bye
+* /quit
+* /updated
+* /logs
+* /dumpbuffer
+* /seen
+* /kick

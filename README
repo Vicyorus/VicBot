@@ -8,7 +8,7 @@ Installation:
 * Get pip
 * Install requests
 * Set your bot's username, password and the wiki you wish to connect on vicbot.py and command.py
-* Run vicbot.py
+* Run vicbot.py with username, password and wiki URL (in that order) as arguments
 
 Commands:
 * /hon

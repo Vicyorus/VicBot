@@ -25,14 +25,14 @@ import codecs
 import time
 from datetime import datetime
 import wikibot
-import command
+from command import command
 
 #VARIABLES AND MISC.
-wiki_name = '' #insert the URL of the wiki
-wiki_username = '' #insert the bot's username
-wiki_password = '' #insert the bot's password
+wiki_username = sys.argv[1]
+wiki_password = sys.argv[2]
+wiki_name = sys.argv[3]
 wikibot.site(wiki_name)
-command.__init__(wiki_username, wiki_password)
+command = command(wiki_username, wiki_password)
 initial_time = time.time()
 userdict = {}
 #END OF VARIABLES
@@ -181,7 +181,7 @@ class VicBot(chatbot.ChatBot):
            c.kick_user(user)
        
        #Swear filter
-       if command.swear_filter(e.text) and not (wikibot.userrights(e.user)):
+       if command.swear_filter(msg) and not (wikibot.userrights(e.user)):
            c.kick_user(e.user)	         
        
        #Log updater command

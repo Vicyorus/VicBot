@@ -56,20 +56,20 @@ class VicBot(chatbot.ChatBot):
     def on_join(self, c, e):
         if (self.logger_on):
             self.format_message(user=e.user.encode('ascii','ignore'),event='join')
-        print '%s -!- %s has joined Special:Chat.' % (time.strftime('%H:%M', time.localtime()), e.user)
+        print '%s -!- %s has joined Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user)
         if e.user not in userdict or e.user in userdict:
             userdict[e.user] = time.time()
                     
     def on_leave(self, c, e):
         if (self.logger_on):
 	    self.format_message(user=e.user.encode('ascii','ignore'),event='leave')
-        print '%s -!- %s has left Special:Chat.' % (time.strftime('%H:%M', time.localtime()), e.user)
+        print '%s -!- %s has left Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user)
 
     def on_kick(self, c, e):
         if (self.logger_on):
             self.format_message(user=e.user[0].encode('ascii','ignore'),
                                        mod=e.user[1].encode('ascii','ignore'),event='kick')
-        print '%s -!- %s has been kicked by %s from Special:Chat.' % (time.strftime('%H:%M', time.localtime()), e.user[0], e.user[1]) #Prints a copy on the console
+        print '%s -!- %s has been kicked by %s from Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user[0], e.user[1]) #Prints a copy on the console
 
     def on_ban(self, c, e):
         if (self.logger_on):
@@ -80,10 +80,10 @@ class VicBot(chatbot.ChatBot):
 		self.format_message(user=e.user[0].encode('ascii','ignore'),
                                         mod=e.user[1].encode('ascii','ignore'),event='unban')
         if e.time != None:
-            print '%s -!- %s was banned from Special:Chat for %s seconds by %s' % (time.strftime('%H:%M', time.localtime()),
+            print '%s -!- %s was banned from Special:Chat for %s seconds by %s' % (time.strftime('%H:%M', time.gmtime()),
                                                                                        e.user[0], e.time, e.user[1])
         else:
-            print '%s -!- %s was unbanned from Special:Chat by %s' % (time.strftime('%H:%M', time.localtime()),
+            print '%s -!- %s was unbanned from Special:Chat by %s' % (time.strftime('%H:%M', time.gmtime()),
                                                                           e.user[0], e.user[1])            
 
     def on_message(self, c, e):

@@ -7,13 +7,13 @@ import threading
 
 import requests
 
-__version__ = '1.4.6b'
+__version__ = '1.5.2b'
 
 class Event(object):
-        def __init__(self, connection):
+	def __init__(self, connection):
 		self.connection = self.parse(connection)
 
-        def parse(self, connection):
+	def parse(self, connection):
 		returned = {}
 		if connection["event"] == "join":
 			connection["data"] = json.loads(connection["data"])
@@ -113,8 +113,26 @@ class Event(object):
 		else:
 			return False
 
+#class PrivateMessage(ChatBot):
+#	def __init__(self, username, password):
+#		ChatBot.__init__(self)
+#		self.c = Client(username, password, wiki)
+#		self.changed = False
+#		self.message = ""
+#
+#	def send(self, message):
+#		self.changed = True
+#		self.message = message
+#
+#	def on_message(self, c, e):
+#		if self.changed:
+#			c.send(c, message)
+#			self.changed = False
+
+
+
 class Client(object):
-	def __init__(self, username, password, site, priv=None, key=None):
+	def __init__(self, username, password, site):
 		self.username = username
 		self.password = password
 		self.session = requests.session()
@@ -122,16 +140,10 @@ class Client(object):
 		self.__login(username, password)
 		data = self.__wikia_request(controller="Chat", format="json")
 		self.settings = {}
-		if key:
-			self.settings["chatkey"] = key
-		else:
-			self.settings['chatkey'] = data['chatkey']
+		self.settings['chatkey'] = data['chatkey']
 		self.settings["port"] = data["nodePort"]
 		self.settings["host"] = data["nodeHostname"]
-		if priv:
-			self.settings["room"] = self.__private_message_id(priv)
-		else:
-			self.settings["room"] = data["roomId"]
+		self.settings["room"] = data["roomId"]
 		self.settings["chatmod"] = data["isChatMod"]
 		self.settings["session"] = self.__get_session(self.settings)
 		self.xhr = self.__initialize(self.settings)
@@ -266,11 +278,43 @@ class Client(object):
 			sys.exit(0)
 		return
 
+	def __private_message_id(self, user):
+		data = self.session.post(self.wiki + "/index.php?action=ajax&rs=ChatAjax&method=getPrivateRoomId&users=[\"" +
+									user + "\",\"" + self.username + "\"]")
+		content = json.loads(data.content)
+		roomid = content['id']
+		return roomid
+
+	def __open_private_chat(self, settings, xhr, user, room):
+		xhr_polling = self.__get_code(xhr)
+		extras = json.dumps({'attrs': {'msgType': 'command','command': 'openprivate', 'roomId':str(room),
+										'users': [user]}})
+		data = self.session.post("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/" +
+								xhr_polling + "?name=" + self.username + "&key=" + 
+								settings['chatkey'] + "&roomId=" + str(settings["room"]) +
+								"&t=" + self.__timestamp(),
+								'5:::' + json.dumps({'name': 'message',
+								'args': [extras]}))
+		return
+
+	def __private_message(self, settings, user, message):
+		if self.priv_dict.has_key(user):
+			xhr = self.__initialize(settings)
+			self.__open_private_chat(settings, xhr, user, self.__private_message_id(user))
+			self.priv_dict[user].send(message, xhr)
+		else:
+			self.priv_dict[user] = PrivateMessage(user, self.username,
+												self.password, self.wiki, settings['chatkey'])
+			self.__private_message(settings, user, message)
+
 	def send(self, message, xhr=None):
 		if xhr:
 			self.__send(self.settings, xhr, message)
 		else:
 			self.__send(self.settings, self.xhr, message)
+
+	def private_message(self, user, message):
+		self.__private_message(self.settings, user, message)
 
 	def go_away(self):
 		self.__go_away(self.settings, self.xhr)
@@ -352,6 +396,9 @@ class ChatBot(threading.Thread):
 	def on_chatmod(self, c, e):
 		pass
 
+	def on_idle(self, c, e):
+		pass
+
 	def run(self):
 		in_chat = 0
 		while 1:
@@ -379,6 +426,8 @@ class ChatBot(threading.Thread):
 					self.on_chatmod(self.c, e)
 				elif connect["event"] == "chat:add":
 					self.on_message(self.c, e)
+				else:
+					self.on_idle(self.c, e)
 
 if __name__ == '__main__':
 	print("""This file isn't exucutable.

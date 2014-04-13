@@ -33,7 +33,7 @@ class command(object):
     def dump_buffer_command(self):
         with open('ChatBot.txt', 'w') as file:
             pass
-        return 'Log file cleared 
+        return 'Log file cleared'
 
     #Logs command. Returns the link to the logs page.
     def log_command(self):

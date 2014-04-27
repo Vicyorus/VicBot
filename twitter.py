@@ -20,7 +20,6 @@ class Twitter(object):
             text = m.group(1)
             if '&#10;' in text:
                 text.replace('&#10;', ' ')
-            print text
             h = HTMLParser()
             text = h.unescape(text)
             s = MLStripper()

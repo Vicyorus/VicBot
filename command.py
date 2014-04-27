@@ -62,7 +62,6 @@ class command(object):
     #Seen command. Tells the last time a certain user spoke.
     def seen_command(self, user, message, dictionary, time):
         seen_user = message.split(' ', 1)[1]
-        print seen_user
         if seen_user in dictionary:
             seen_time = int(time - dictionary[seen_user])
             if seen_time == 0 or user == seen_user or seen_user == self.username:

@@ -193,7 +193,6 @@ class Client(object):
 	    
 	def __connection(self):
 		time = self.__timestamp()
-		print self.xhr_url + time
 		data = self.opener.open(self.xhr_url + time)
 		content = re.findall(r'.:::(.*)', data.read().decode('utf8'))
 		if content:

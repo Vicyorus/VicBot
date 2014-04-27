@@ -5,9 +5,6 @@ A chatbot/logger for Wikia Chats
 
 Installation:
 * Install Python
-* Get pip
-* Install requests
-* Set your bot's username, password and the wiki you wish to connect on vicbot.py and command.py
 * Run vicbot.py with username, password and wiki URL (in that order) as arguments
 
 Commands:
@@ -28,3 +25,4 @@ Commands:
 * /seen
 * /kick
 * /updatelogs
+* /gauss

@@ -1,354 +1,357 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+###############################################################################
+#                            ___      __________                         
+#                            \  \    /  /  ____/                         
+#                             \  \  /  /  /__                            
+#                              \  \/  /   __/                            
+#                               \    /  /____                             
+#                                \__/_______/                            
+#                                                                       
+#                             VICBOT CLIENT CORE                          
+#                                   MK. II                                
+#
+#    This program is free software: you can redistribute it and/or modify 
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+###############################################################################
+
 import re
 import sys
 import time
 import json
 import urllib
-import threading
+from threading import Timer, Thread
 import cookielib
 import urllib2
+import os
 
-__version__ = '1.4.6b'
+
+import requests
+
+__version__ = 2.0
+
+#This is used to keep the bot running
+running = True
 
 class Event(object):
-        def __init__(self, connection):
-		self.connection = self.parse(connection)
+    def __init__(self, connection):
+        self.connection = self.parse(connection)
 
-        def parse(self, connection):
-		returned = {}
-		if connection["event"] == "join":
-			connection["data"] = json.loads(connection["data"])
-		elif connection["event"] != "disableReconnect":
-			connection["data"] = json.loads(connection["data"])
-		if connection["event"] == "kick":
-			returned["user"] = [connection["data"]["attrs"]["kickedUserName"],
-								connection["data"]["attrs"]["moderatorName"]]
-			returned["text"] = None
-			returned["status"] = None
-			returned["time"] = None
-			returned["madechatmod"] = False
-		elif connection["event"] == "chat:add" and connection["data"]["attrs"].has_key("wfMsg"):
-			returned["user"] = [connection["data"]["attrs"]["msgParams"][1],
-								connection["data"]["attrs"]["msgParams"][0]]
-			returned["text"] = None
-			returned["status"] = None
-			returned["time"] = None
-			returned["madechatmod"] = True
-		elif connection["event"] == "ban":
-			returned["user"] = [connection["data"]["attrs"]["kickedUserName"],
-								connection["data"]["attrs"]["moderatorName"]]
-			returned["text"] = None
-			returned["status"] = None
-			returned["time"] = connection["data"]["attrs"]["time"]
-			returned["madechatmod"] = False
-		elif connection["event"] == "logout":
-			returned["user"] = connection["data"]["attrs"]["name"]
-			returned["text"] = None
-			returned["status"] = None
-			returned["time"] = None
-			returned["madechatmod"] = False
-		elif connection["event"] == "updateUser":
-			returned["user"] = connection["data"]["attrs"]["name"]
-			returned["text"] = None
-			returned["status"] = connection["data"]["attrs"]["statusState"]
-			returned["time"] = None
-			returned["madechatmod"] = False
-		elif connection["event"] == "join":
-			returned["user"] = connection["data"]["attrs"]["name"]
-			returned["text"] = None
-			returned["status"] = "here"
-			returned["time"] = None
-			returned["madechatmod"] = False
-		elif connection["event"] == "part":
-			returned["user"] = connection["data"]["attrs"]["name"]
-			returned["text"] = None
-			returned["status"] = None
-			returned["time"] = None
-			returned ["madechatmod"] = False
-		elif connection["event"] == "chat:add":
-			returned["user"] = connection["data"]["attrs"]["name"]
-			returned["text"] = connection["data"]["attrs"]["text"]
-			returned["status"] = None
-			returned["time"] = None
-			returned["madechatmod"] = False
-		else:
-			returned["user"] = None
-			returned["text"] = None
-			returned["status"] = None
-			returned["time"] = None
-			returned["madechatmod"] = False
-		return returned
+    def parse(self, connection):
+        returned = {}
+        if connection["event"] == "join":
+            connection["data"] = json.loads(connection["data"])
+            
+        elif connection["event"] != "disableReconnect":
+            connection["data"] = json.loads(connection["data"])
+            
+        if connection["event"] == "kick":
+            returned["user"] = [connection["data"]["attrs"]["kickedUserName"],
+                                connection["data"]["attrs"]["moderatorName"]]
+            returned["text"] = None
+            returned["time"] = None
+        
+        elif connection["event"] == "chat:add" and connection["data"]["attrs"].has_key("wfMsg"):
+            returned["user"] = [connection["data"]["attrs"]["msgParams"][1],
+                                connection["data"]["attrs"]["msgParams"][0]]
+            returned["text"] = None
+            returned["time"] = None
+        
+        elif connection["event"] == "ban":
+            returned["user"] = [connection["data"]["attrs"]["kickedUserName"],
+                         connection["data"]["attrs"]["moderatorName"]]
+            returned["text"] = None
+            returned["time"] = connection["data"]["attrs"]["time"]
+        
+        elif connection["event"] == "logout":
+            returned["user"] = connection["data"]["attrs"]["name"]
+            returned["text"] = None
+            returned["time"] = None
+        
+        elif connection["event"] == "join":
+            returned["user"] = connection["data"]["attrs"]["name"]
+            returned["text"] = None
+            returned["time"] = None
+        
+        elif connection["event"] == "part":
+            returned["user"] = connection["data"]["attrs"]["name"]
+            returned["text"] = None
+            returned["time"] = None
+        
+        elif connection["event"] == "chat:add":
+            returned["user"] = connection["data"]["attrs"]["name"]
+            returned["text"] = connection["data"]["attrs"]["text"]
+            returned["time"] = None
+        
+        else:
+            returned["user"] = None
+            returned["text"] = None
+            returned["time"] = None
+        return returned
 
-	@property
-	def user(self):
-		if self.connection['user']:
-			return self.connection["user"]
-		else:
-			return None
+    @property
+    def user(self):
+        if self.connection['user']:
+            return self.connection["user"]
+        else:
+            return None
 
-	@property
-	def text(self):
-		if self.connection['text']:
-			return self.connection["text"]
-		else:
-			return None
+    @property
+    def text(self):
+        if self.connection['text']:
+            return self.connection["text"]
+        else:
+            return None
 
-	@property
-	def status(self):
-		if self.connection['status']:
-			return self.connection["status"]
-		else:
-			return None
-
-	@property
-	def time(self):
-		if self.connection['time']:
-			return self.connection["time"]
-		else:
-			return None
-
-	@property
-	def made_chat_mod(self):
-		if self.connection['madechatmod']:
-			return self.connection["madechatmod"]
-		else:
-			return False
+    @property
+    def time(self):
+        if self.connection['time']:
+            return self.connection["time"]
+        else:
+            return None
+        
 
 class Client(object):
-	def __init__(self, username, password, site, priv=None, key=None):
-		self.username = username
-		self.password = password
-	        self.wikiname = site
-	        self.api_path = self.wikiname + "api.php"
-		self.wiki_path = self.wikiname + "wikia.php?controller=Chat&format=json"
+    def __init__(self, username, password, site):
+        self.wiki_path = site + "wikia.php?controller=Chat&format=json"
+        
+        #Cookie jar
+        self.cookie_jar = cookielib.CookieJar()
+        
+        #HTTP opener
+        self.opener = requests.Session()
+        self.headers = {
+            'User-Agent': 'vicbot v.2.0.0',
+            'Accept': '*/*',
+            'Content-Type': 'application/octet-stream',
+            'Connection': 'keep-alive'
+        }
+        
+        #Basic operations
+        self.__login(username, password, site)
+        data = self.__wikia_request()
 
-		#Cookie jar
-		self.cookie_jar = cookielib.CookieJar()
-		
-		#HTTP opener
-		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookie_jar))
-		self.opener.add_headers = [("User-Agent", "Wikibot/LMR-&-V")]
-		
-		#Basic operations
-		self.__login(username, password)
-		data = self.__wikia_request()
-		self.settings = {}
-		
-		if key:
-			self.settings["chatkey"] = key
-		else:
-			self.settings['chatkey'] = data['chatkey']
-			
-		self.settings["port"] = data["nodePort"]
-		self.settings["host"] = data["nodeHostname"]
-		
-		if priv:
-			self.settings["room"] = self.__private_message_id(priv)
-		else:
-			self.settings["room"] = data["roomId"]
-			
-		self.settings["chatmod"] = data["isChatMod"]
-		self.xhr = self.__initialize(self.settings)
-		self.priv_dict = {}
-		self.xhr_url = "http://" + self.settings["host"] + ":" + self.settings["port"] + "/socket.io/1/xhr-polling/" + \
-		                self.xhr + "?name=" + self.username + "&key=" + self.settings["chatkey"] + "&roomId=" + \
-		                str(self.settings["room"]) + "&t="
-	        self.connection()
-			    
-	def __login(self, username, password):
-		login_data = {
-			'action': 'login',
-			'lgname': username,
-			'lgpassword': password,
-			'format':'json'}
-		data = urllib.urlencode(login_data)
-		response = self.opener.open(self.api_path, data)
-		content = json.loads(response.read())
-		login_data['lgtoken'] = content['login']['token']
-		data = urllib.urlencode(login_data)
-		response = self.opener.open(self.api_path, data)
-		content = json.loads(response.read())
-		if content['login']['result'] != 'Success':
-			print 'Couldn\'t log in: Quitting.'
-			sys.exit(1)
+        #Set the settings values 
+        self.settings = {
+            'chatkey': data['chatkey'],
+            'server': data['nodeInstance'],
+            'host': data["nodeHostname"],
+            'room': data["roomId"]
+        }
+        
+        #Chat url
+        self.chat_url = "http://{}/socket.io/".format(self.settings['host'])
+        self.t = 0
+        self.request_data = {
+            'name': username,
+            'key': self.settings["chatkey"],
+            'roomId': self.settings["room"],
+            'serverId': self.settings['server'],
+            'EIO': 2,
+            'transport': 'polling'
+        }   
+        
+        #Initial
+        self.__set_sid(self.settings)
+        
+    def post(self, data):
+        #This checks if the request is a ping to the server
+        #used to keep the connection alive
+        if data == 'ping':
+            body = self.format_message('2')
+        else:
+            body = self.format_message( '42' + json.dumps(['message', json.dumps({'id': None, 'attrs': data})]) )
+            
+        #These lines set the URL and request data 
+        self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
+        request_data = urllib.urlencode( self.request_data )
+        url = self.chat_url + '?' + request_data
+        
+        #This is the actual call
+        response = self.opener.post( url, data=body, headers=self.headers )
+        self.t += 1
+        return response
+            
+    def get(self):
+        #These lines set the URL and request data 
+        self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
+        request_data = urllib.urlencode( self.request_data )
+        url = self.chat_url + '?' + request_data
+        
+        #This is the actual call
+        response = self.opener.get( url, headers=self.headers )
+        self.t += 1
+        return response
+        
 
-	def __wikia_request(self):
-		response = self.opener.open(self.wiki_path)
-		content = json.loads(response.read())
-		return content
+    def restart(self):
+        python = sys.executable
+        os.execl(python, python, * sys.argv)
+        
+    def __login(self, username, password, wiki):
+        login_data = {
+            'action': 'login',
+            'lgname': username,
+            'lgpassword': password,
+            'format':'json'}
+        data = urllib.urlencode(login_data)
+        response = self.opener.post(wiki + "/api.php",data=login_data)
+        content = json.loads(response.content)
+        login_data['lgtoken'] = content['login']['token']
+        data = urllib.urlencode(login_data)
+        response = self.opener.post(wiki + "/api.php",data=login_data)
+        content = json.loads(response.content)
+        if content['login']['result'] != 'Success':
+            print 'Couldn\'t log in: Quitting.'
+            sys.exit(1)
+        else:
+            print "Connected as: {}".format(username)
 
-	def __initialize(self, settings):
-		data = self.opener.open("http://" + settings["host"] + ":" + settings["port"] + "/socket.io/1/xhr-polling/?name=" +
-			self.username + "&key=" + settings["chatkey"]
-			+ "&roomId=" + str(settings["room"]) + "&jsonp=1")
-		regex = re.compile(r'io\..*?\(\"(.*?):.*?\"\);')
-		array = regex.findall(data.read())
-		if array:
-			return array[0]
-		else:
-			return None
+    def __wikia_request(self):
+        response = self.opener.get(self.wiki_path)
+        content = json.loads(response.content)
+        return content
 
-	def __timestamp(self):
-		unix = time.time()
-		return str(round(unix, 0))
-	    
-	def __connection(self):
-		time = self.__timestamp()
-		data = self.opener.open(self.xhr_url + time)
-		content = re.findall(r'.:::(.*)', data.read().decode('utf8'))
-		if content:
-			try:
-				loads = json.loads(content[0])
-				return loads
-			except ValueError:
-				return None
-		else:
-			return None
+    def __set_sid(self, settings):
+        response = self.get()
+        
+        #This should work while the response's length is less than 100
+        content = json.loads( response.content[5:] )
+        
+        #Set the sid for future requests
+        self.request_data['sid'] = content['sid']
+        return
 
-	def connection(self):
-		var = self.__connection()
-		return var
+    def __timestamp(self):
+        unix = time.time()
+        return str(int(round(unix, 0)))
 
-	def __send(self, message):
-		extras =  json.dumps({'attrs': {'msgType': 'chat', 'text': message}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(), 
-			  '5:::' + json.dumps({'name':'message','args': [extras]}))
-		return
+    def __connection(self):
+        request = self.get()
+        response = request.content
+        if "\x00\x02\xff40" in response:
+            self.socket_connect()
+            match = re.findall("\x00\x02\xff40\x00.*\xff42(.*)", response)
+            try:
+                content = json.loads( match[0] )
+                return content
+            except:
+                return "\x00\x02\xff40" 
+        
+        elif "\xff42[" in response:
+            match = re.findall("\x00.*\xff42(.*)", response)
+            content = json.loads( match[0] )
+            return content
+        
+        else:
+            return response
+ 
+    def connection(self):
+        var = self.__connection()
+        return var
+        
 
-	def __go_away(self):
-		extras = json.dumps({'attrs': {'msgType':'command','command':'setstatus','statusState':'away'}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-			'5:::' + json.dumps({'name': 'message','args': [extras]}))
-		return
+    #Socket-related functions
+    #These functions are related to the response of the server
+    #or having to ping the server
+    def socket_connect(self):
+        print "Logged in to chat!"
+        Thread(target=self.socket_ping).start()
 
-	def __come_back(self):
-		extras = json.dumps({'attrs': {'msgType':'command','command':'setstatus','statusState':'here'}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-			'5:::' + json.dumps({'name': 'message','args': [extras]}))
-		return
+    def socket_ping(self):
+        time.sleep(24)
+        self.post('ping')
+        self.socket_ping()
+        return
+ 
+    #Encoding functions
+    #These functions are used to encode information that's being sent to the server
+    def int_to_encoded(self, length):
+        payload = ''
+        for c in str(length):
+            payload += chr(int(c))
+        return "\x00" + payload + "\xff"
 
-	def __kick_user(self, user):
-		extras = json.dumps({'attrs': {'msgType':'command','command':'kick','userToKick':user}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-			'5:::' + json.dumps({'name': 'message', 'args': [extras]}))
-		return
+    def format_message(self, message):
+        return self.int_to_encoded( len(message) ) + message
 
-	def __ban_user(self, user, time, reason):
-		extras = json.dumps({'attrs': {'msgType':'command','command':'ban','userToBan':user,
-			'time':time,'reason':reason}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-			'5:::' + json.dumps({'name': 'message','args': [extras]}))
-		return
+    def send(self, message):
+        self.post({'msgType': 'chat', 'text': message})
+        return
 
-	def __end_ban(self, user, reason):
-		extras = json.dumps({'attrs': {'msgType':'command', 'command':'ban', 'userToBan':user,
-			'time':'0', 'reason':reason}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-			'5:::' + json.dumps({'name': 'message', 'args': [extras]}))
-		return
+    def kick_user(self, user):
+        self.post({'msgType': 'command', 'command': 'kick', 'userToKick': user})
+        return    
 
-	def __give_chatmod(self, user):
-		extras = json.dumps({'attrs': {'msgType': 'command','command': 'givechatmod', 'userToPromote': user}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-								'5:::' + json.dumps({'name': 'message',
-								'args': [extras]}))
-		return
+    def disconnect(self, nodisconnect=False):
+        running = False
+        self.post({'msgType': 'command', 'command': 'logout'})
+        if not nodisconnect:
+            sys.exit(1)
+        return
 
-	def __disconnect(self, nodisconnect=False):
-		extras = json.dumps({'attrs': {'msgType': 'command','command': 'logout'}})
-		data = self.opener.open(self.xhr_url + self.__timestamp(),
-								'5:::' + json.dumps({'name': 'message',
-								'args': [extras]}))
-		if not nodisconnect:
-			sys.exit(0)
-		return
+    def initialize(self):
+       return 
 
-	def send(self, message):
-		self.__send(message)
 
-	def go_away(self):
-		self.__go_away()
+class ChatBot(Thread):
+    def __init__(self, username, password, site):
+        self.username = username
+        self.password = password
+        self.c = Client(username, password, site)
+        Thread.__init__(self)
 
-	def come_back(self):
-		self.__come_back()
+    def on_join(self, c, e):
+        pass
 
-	def kick_user(self, user):
-		self.__kick_user(user)
+    def on_leave(self, c, e):
+        pass
 
-	def ban_user(self, user, time=3600, reason='Misbehaving in chat'):
-		self.__ban_user(user, time, reason)
+    def on_message(self, c, e):
+        pass
 
-	def end_ban(self, user, reason='Ending chat ban'):
-		self.__end_ban(user, reason)
+    def on_kick(self, c, e):
+        pass
 
-	def give_chatmod(self, user):
-		self.__give_chatmod(user, reason)
+    def on_ban(self, c, e):
+        pass
 
-	def disconnect(self, nodisconnect=False):
-		self.__disconnect(nodisconnect=nodisconnect)
 
-class ChatBot(threading.Thread):
-	def __init__(self, username, password, site):
-		self.username = username
-		self.password = password
-		self.c = Client(username, password, site)
-		threading.Thread.__init__(self)
-
-	def on_welcome(self, c, e):
-		pass
-
-	def on_join(self, c, e):
-		pass
-
-	def on_leave(self, c, e):
-		pass
-
-	def on_message(self, c, e):
-		pass
-
-	def on_away(self, c, e):
-		pass
-
-	def on_back(self, c, e):
-		pass
-
-	def on_kick(self, c, e):
-		pass
-
-	def on_ban(self, c, e):
-		pass
-
-	def on_chatmod(self, c, e):
-		pass
-
-	def run(self):
-		in_chat = 0
-		while 1:
-			connect = self.c.connection()
-			if connect:
-				in_chat += 1
-				e = Event(connect)
-				if in_chat == 1:
-					self.on_welcome(self.c, e)
-				elif connect["event"] == "join":
-					self.on_join(self.c, e)
-				elif connect["event"] == "logout":
-					self.on_leave(self.c, e)
-				elif connect["event"] == "part":
-					self.on_leave(self.c, e)
-				elif connect["event"] == "updateUser" and connect["data"]["attrs"]["statusState"] == 'away':
-					self.on_away(self.c, e)
-				elif connect["event"] == "updateUser" and connect["data"]["attrs"]["statusState"] == 'here':
-					self.on_back(self.c, e)
-				elif connect["event"] == "kick":
-					self.on_kick(self.c, e)
-				elif connect["event"] == "ban":
-					self.on_ban(self.c, e)
-				elif e.made_chat_mod is True:
-					self.on_chatmod(self.c, e)
-				elif connect["event"] == "chat:add":
-					self.on_message(self.c, e)
-
+    def run(self):
+        while running:
+            content = self.c.connection()
+            if content in ("\x00\x02\xff40", "\x00\x01\xff3"):
+                pass
+            elif "Session ID unknown" in content:
+                print "Error: Session ID unknown"
+                sys.exit(1)
+            else:
+                content = content[1]
+                e = Event(content)
+                if content["event"] == "join":
+                    self.on_join(self.c, e)
+                elif content["event"] == "logout":
+                    self.on_leave(self.c, e)
+                elif content["event"] == "part":
+                    self.on_leave(self.c, e)
+                elif content["event"] == "kick":
+                    self.on_kick(self.c, e)
+                elif content["event"] == "ban":
+                    self.on_ban(self.c, e)
+                elif content["event"] == "chat:add":
+                    self.on_message(self.c, e)
+                    
 if __name__ == '__main__':
-	print("""This file isn't exucutable.
+    print("""This file isn't exucutable.
 Please go to http://community.wikia.com/wiki/User:Hairr/Chatbot for information
 on how to set up. Thanks.""")

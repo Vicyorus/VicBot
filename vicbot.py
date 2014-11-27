@@ -170,7 +170,7 @@ class VicBot(chatbot.ChatBot):
             c.send(command.dump_buffer_command())
 
         #YouTube information
-        if ('http' and 'youtu' in msg) and (e.user != wiki_username) and self.youtubeinfo:
+        if ('http' and 'youtu' in msg) and (e.user not in ["CPChatBot",  wiki_username]) and self.youtubeinfo:
             c.send(command.youtube_info(e.text))
 
         #Seen command

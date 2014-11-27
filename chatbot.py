@@ -165,33 +165,41 @@ class Client(object):
         self.__set_sid(self.settings)
         
     def post(self, data):
-        #This checks if the request is a ping to the server
-        #used to keep the connection alive
-        if data == 'ping':
-            body = self.format_message('2')
-        else:
-            body = self.format_message( '42' + json.dumps(['message', json.dumps({'id': None, 'attrs': data})]) )
+        try:
+            #This checks if the request is a ping to the server
+            #used to keep the connection alive
+            if data == 'ping':
+                body = self.format_message('2')
+            else:
+                body = self.format_message( '42' + json.dumps(['message', json.dumps({'id': None, 'attrs': data})]) )
             
-        #These lines set the URL and request data 
-        self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
-        request_data = urllib.urlencode( self.request_data )
-        url = self.chat_url + '?' + request_data
+            #These lines set the URL and request data 
+            self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
+            request_data = urllib.urlencode( self.request_data )
+            url = self.chat_url + '?' + request_data
         
-        #This is the actual call
-        response = self.opener.post( url, data=body, headers=self.headers )
-        self.t += 1
-        return response
+            #This is the actual call
+            response = self.opener.post( url, data=body, headers=self.headers )
+            self.t += 1
+            return response
+        except: #Handle any exception (timeout, connection reset, etc.)
+            print "An error ocurred. Restarting."
+            self.restart()
             
     def get(self):
-        #These lines set the URL and request data 
-        self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
-        request_data = urllib.urlencode( self.request_data )
-        url = self.chat_url + '?' + request_data
+        try:
+            #These lines set the URL and request data 
+            self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
+            request_data = urllib.urlencode( self.request_data )
+            url = self.chat_url + '?' + request_data
         
-        #This is the actual call
-        response = self.opener.get( url, headers=self.headers )
-        self.t += 1
-        return response
+            #This is the actual call
+            response = self.opener.get( url, headers=self.headers )
+            self.t += 1
+            return response
+        except: #Handle any exception (timeout, connection reset, etc.)
+            print "An error ocurred. Restarting."
+            self.restart()
         
 
     def restart(self):
@@ -266,7 +274,9 @@ class Client(object):
     #or having to ping the server
     def socket_connect(self):
         print "Logged in to chat!"
-        Thread(target=self.socket_ping).start()
+        ping_thr = Thread(target=self.socket_ping)
+        ping_thr.daemon =True
+        ping_thr.start()
 
     def socket_ping(self):
         time.sleep(24)
@@ -330,11 +340,12 @@ class ChatBot(Thread):
     def run(self):
         while running:
             content = self.c.connection()
+            print content
             if content in ("\x00\x02\xff40", "\x00\x01\xff3"):
                 pass
             elif "Session ID unknown" in content:
                 print "Error: Session ID unknown"
-                sys.exit(1)
+                self.c.restart()
             else:
                 content = content[1]
                 e = Event(content)

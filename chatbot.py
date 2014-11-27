@@ -340,7 +340,6 @@ class ChatBot(Thread):
     def run(self):
         while running:
             content = self.c.connection()
-            print content
             if content in ("\x00\x02\xff40", "\x00\x01\xff3"):
                 pass
             elif "Session ID unknown" in content:

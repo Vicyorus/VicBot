@@ -26,13 +26,14 @@ import time
 from datetime import datetime
 import wikibot
 from command import command
+import threading
 
 #VARIABLES AND MISC.
 wiki_username = sys.argv[1]
 wiki_password = sys.argv[2]
 wiki_name = 'http://' + sys.argv[3] +  '.wikia.com/'
 wikibot.site(wiki_name)
-command = command(wiki_username, wiki_password)
+
 initial_time = time.time()
 userdict = {}
 #END OF VARIABLES
@@ -40,6 +41,7 @@ userdict = {}
 class VicBot(chatbot.ChatBot):
     def __init__(self):
         chatbot.ChatBot.__init__(self, wiki_username, wiki_password, wiki_name)
+        self.command = command(self, wiki_username, wiki_password)
         self.last_updated = time.time()
         self.logger_on = True
         self.hello_status = True
@@ -48,6 +50,7 @@ class VicBot(chatbot.ChatBot):
         self.seen = True
         self.new_day = False
         self.updated = False
+        self.log_thread()
         
     def on_welcome(self, c, e):
         print 'Logged in.'
@@ -61,7 +64,7 @@ class VicBot(chatbot.ChatBot):
             userdict[e.user] = time.time()
         if e.user == "CPChatBot":
             c.send("CPChatBot detected back in chat. Updating logs and shutting off logger.")
-            command.update_command(None)
+            self.command.update_command(None)
             self.logger_on = False
                     
     def on_leave(self, c, e):
@@ -117,7 +120,7 @@ class VicBot(chatbot.ChatBot):
 	    c.send('Logging is ENABLED')	   
         elif msg.startswith('!loff') and self.logger_on and (wikibot.userrights(e.user)):
 	    self.logger_on = False
-	    command.update_command(None)
+	    self.command.update_command(None)
 	    self.updated = True
 	    c.send('Logging is DISABLED')
        
@@ -147,7 +150,7 @@ class VicBot(chatbot.ChatBot):
        
         #Hello command
         if msg.startswith('!hello') and self.hello_status:
-            c.send(command.hello_command(e.text))
+            c.send(self.command.hello_command(e.text))
        
         #Goodbye command
         if msg.startswith('!bye'):
@@ -159,26 +162,26 @@ class VicBot(chatbot.ChatBot):
 
         #Updated command
         if msg.startswith('!updated') and (wikibot.userrights(e.user)):
-            c.send(command.updated_command(e.user, self.last_updated, self.updated))
+            c.send(self.command.updated_command(e.user, self.last_updated, self.updated))
        
         #Logs command
         if msg.startswith('!logs'):
-            c.send(command.log_command())
+            c.send(self.command.log_command())
 
         #Dump buffer commannd
         if msg.startswith('!dumpbuffer') and (wikibot.userrights(e.user)):
-            c.send(command.dump_buffer_command())
+            c.send(self.command.dump_buffer_command())
 
         #YouTube information
         if ('http' and 'youtu' in msg) and (e.user not in ["CPChatBot",  wiki_username]) and self.youtubeinfo:
-            c.send(command.youtube_info(e.text))
+            c.send(self.command.youtube_info(e.text))
 
         #Seen command
         if msg.startswith('!seen '):
             if self.seen:
                 if e.user not in userdict:
                     userdict[e.user] = time.time()
-                c.send(command.seen_command(e.user, e.text, userdict, time.time()))  
+                c.send(self.command.seen_command(e.user, e.text, userdict, time.time()))  
             else: 
                 pass
             
@@ -194,12 +197,13 @@ class VicBot(chatbot.ChatBot):
 	        pass
        
         #Swear filter
-        #if command.swear_filter(msg) and not (wikibot.userrights(e.user)):
+        #if self.command.swear_filter(msg) and not (wikibot.userrights(e.user)):
         #    c.kick_user(e.user)	         
        
         #Log updater command
         if msg.startswith('!updatelogs') and (wikibot.userrights(e.user)) and self.logger_on:
-            c.send(command.update_command(e.user))
+            self.th.cancel()
+            c.send(self.command.update_command(e.user))
             self.updated = True
        
         #Adds users to the user dictionary, for the !seen command
@@ -214,12 +218,12 @@ class VicBot(chatbot.ChatBot):
 	        x = cond[0]
                 y = cond[1]
                 z = cond[2]
-                c.send(command.gauss_progression(int(x), int(y), int(z)))
+                c.send(self.command.gauss_progression(int(x), int(y), int(z)))
             except IndexError or ValueError:
 	        pass
        
         if ('https://twitter.com/' in msg) and self.twitterinfo:
-            c.send(command.twitter_info(e.text))
+            c.send(self.command.twitter_info(e.text))
      
     def format_message(self, **kwargs):
 	f = codecs.open('ChatBot.txt', 'a', encoding = 'utf-8')
@@ -237,6 +241,11 @@ class VicBot(chatbot.ChatBot):
         elif kwargs['event'] == 'unban':
             f.write(time + ' -!- ' + kwargs['user'] + ' was unbanned from Special:Chat by ' + kwargs['mod'] + '.\n')
         f.close()
+    
+    def log_thread(self):
+        self.th = threading.Timer(3600, self.command.update_logs)
+        self.th.daemon = True
+        self.th.start()
         
 if __name__ == '__main__':
     bot = VicBot()

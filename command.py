@@ -9,7 +9,8 @@ from datetime import datetime
 import twitter
 
 class command(object):
-    def __init__(self, username, password):
+    def __init__(self, vicbot, username, password):
+        self.vicbot = vicbot
         self.username = username
         self.password = password
     
@@ -72,7 +73,7 @@ class command(object):
             return "I haven't seen %s since I have been here." % seen_user
 
     #Log updater function.
-    def update_logs(self, user):
+    def update_logs(self, user=None):
         wikibot.login(self.username, self.password)
         f = codecs.open('ChatBot.txt', 'r', encoding='utf-8')
         a = f.read()
@@ -98,6 +99,11 @@ class command(object):
         w.write('')
         w.close()
         wikibot.logout()
+        #Modify some important values on the client
+        self.vicbot.updated = True
+        self.vicbot.last_updated = time.time()
+        self.vicbot.log_thread()
+        
     
     #Gauss command. Sums all the numbers on a secuence from 'x' to 'y' with a difference of 'z'.  
     def gauss_progression(self, x, y, z):

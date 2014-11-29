@@ -4,25 +4,26 @@ VicBot
 A chatbot/logger for Wikia Chats
 
 Installation:
-* Install Python
-* Run vicbot.py with username, password and wiki URL (in that order) as arguments
+* Install Python.
+* Install the requests module.
+* Run vicbot.py with username, password and wiki name (e.g. 'community' for Community Central) as arguments.
 
 Commands:
-* /hon
-* /hoff
-* /yton
-* /ytoff
-* /lon
-* /loff
-* /seenon
-* /seenoff
-* /hello
-* /bye
-* /quit
-* /updated
-* /logs
-* /dumpbuffer
-* /seen
-* /kick
-* /updatelogs
-* /gauss
+* !hon
+* !hoff
+* !yton
+* !ytoff
+* !lon
+* !loff
+* !seenon
+* !seenoff
+* !hello
+* !bye
+* !quit
+* !updated
+* !logs
+* !dumpbuffer
+* !seen
+* !kick
+* !updatelogs
+* !gauss

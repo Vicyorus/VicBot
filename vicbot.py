@@ -36,6 +36,7 @@ wikibot.site(wiki_name)
 
 initial_time = time.time()
 userdict = {}
+ignored = []
 #END OF VARIABLES
 
 class VicBot(chatbot.ChatBot):
@@ -43,7 +44,7 @@ class VicBot(chatbot.ChatBot):
         chatbot.ChatBot.__init__(self, wiki_username, wiki_password, wiki_name)
         self.command = command(self, wiki_username, wiki_password)
         self.last_updated = time.time()
-        self.logger_on = True
+        self.logger_on = False 
         self.hello_status = True
         self.youtubeinfo = True
         self.twitterinfo = True
@@ -105,126 +106,137 @@ class VicBot(chatbot.ChatBot):
             
         #Prints the messages on the console
         print u'%s <%s>: %s' % (time.strftime('%H:%M', time.gmtime()), e.user, e.text)
+        
+        if e.user not in ignored:
+            #Hello command switch
+            if msg.startswith('!hon') and not self.hello_status and (wikibot.userrights(e.user)):
+                self.hello_status = True
+                c.send('The !hello command is ON')
+            elif msg.startswith('!hoff') and self.hello_status and (wikibot.userrights(e.user)):
+                self.hello_status = False
+                c.send('The !hello command is OFF')
        
-        #Hello command switch
-        if msg.startswith('!hon') and not self.hello_status and (wikibot.userrights(e.user)):
-            self.hello_status = True
-            c.send('The !hello command is ON')
-        elif msg.startswith('!hoff') and self.hello_status and (wikibot.userrights(e.user)):
-            self.hello_status = False
-            c.send('The !hello command is OFF')
+            #Logging switch
+            if msg.startswith('!lon') and not self.logger_on and (wikibot.userrights(e.user)):
+                self.logger_on = True
+                c.send('Logging is ENABLED')	   
+            elif msg.startswith('!loff') and self.logger_on and (wikibot.userrights(e.user)):
+	        self.logger_on = False
+	        self.command.update_command(None)
+	        self.updated = True
+	        c.send('Logging is DISABLED')
        
-        #Logging switch
-        if msg.startswith('!lon') and not self.logger_on and (wikibot.userrights(e.user)):
-            self.logger_on = True
-	    c.send('Logging is ENABLED')	   
-        elif msg.startswith('!loff') and self.logger_on and (wikibot.userrights(e.user)):
-	    self.logger_on = False
-	    self.command.update_command(None)
-	    self.updated = True
-	    c.send('Logging is DISABLED')
+            #YouTube video information switch
+            if msg.startswith('!yton') and not self.youtubeinfo and (wikibot.userrights(e.user)):
+                self.youtubeinfo = True
+                c.send('YouTube information is ON')
+            elif msg.startswith('!ytoff') and self.youtubeinfo and (wikibot.userrights(e.user)):
+                self.youtubeinfo = False
+                c.send('YouTube information is OFF')
        
-        #YouTube video information switch
-        if msg.startswith('!yton') and not self.youtubeinfo and (wikibot.userrights(e.user)):
-	    self.youtubeinfo = True
-	    c.send('YouTube information is ON')
-        elif msg.startswith('!ytoff') and self.youtubeinfo and (wikibot.userrights(e.user)):
-	    self.youtubeinfo = False
-  	    c.send('YouTube information is OFF')
+            #Seen command switch
+            if msg.startswith('!seenon') and not self.seen and (wikibot.userrights(e.user)):
+                self.seen = True
+	        c.send('The !seen command is now ON')
+            elif msg.startswith('!seenoff') and self.seen and (wikibot.userrights(e.user)):
+                self.seen = False
+                c.send('The !seen command is now OFF')
+                
+            #Twitter tweet information switch
+            if msg.startswith('!twon') and not self.twitterinfo and (wikibot.userrights(e.user)):
+                self.twitterinfo = True
+                c.send('Twitter information is ON')
+            elif msg.startswith('!twoff') and self.twitterinfo and (wikibot.userrights(e.user)):
+                self.twitterinfo = False
+	        c.send('Twitter information is OFF')
        
-        #Seen command switch
-        if msg.startswith('!seenon') and not self.seen and (wikibot.userrights(e.user)):
-	    self.seen = True
-	    c.send('The !seen command is now ON')
-        elif msg.startswith('!seenoff') and self.seen and (wikibot.userrights(e.user)):
-	    self.seen = False
-	    c.send('The !seen command is now OFF')
-	   
-        #Twitter tweet information switch
-        if msg.startswith('!twon') and not self.twitterinfo and (wikibot.userrights(e.user)):
-	    self.twitterinfo = True
-	    c.send('Twitter information is ON')
-        elif msg.startswith('!twoff') and self.twitterinfo and (wikibot.userrights(e.user)):
-	    self.twitterinfo = False
-	    c.send('Twitter information is OFF')
+            #Hello command
+            if msg.startswith('!hello') and self.hello_status:
+                c.send(self.command.hello_command(e.text))
        
-        #Hello command
-        if msg.startswith('!hello') and self.hello_status:
-            c.send(self.command.hello_command(e.text))
+            #Goodbye command
+            if msg.startswith('!bye'):
+                c.send('Goodbye!')  
        
-        #Goodbye command
-        if msg.startswith('!bye'):
-            c.send('Goodbye!')  
-       
-        #Quit command
-        if msg.startswith('!quit') and (wikibot.userrights(e.user)):
-            sys.exit(1)
+            #Quit command
+            if msg.startswith('!quit') and (wikibot.userrights(e.user)):
+                sys.exit(1)
 
-        #Updated command
-        if msg.startswith('!updated') and (wikibot.userrights(e.user)):
-            c.send(self.command.updated_command(e.user, self.last_updated, self.updated))
+            #Updated command
+            if msg.startswith('!updated') and (wikibot.userrights(e.user)):
+                c.send(self.command.updated_command(e.user, self.last_updated, self.updated))
        
-        #Logs command
-        if msg.startswith('!logs'):
-            c.send(self.command.log_command())
+            #Logs command
+            if msg.startswith('!logs'):
+                c.send(self.command.log_command())
 
-        #Dump buffer commannd
-        if msg.startswith('!dumpbuffer') and (wikibot.userrights(e.user)):
-            c.send(self.command.dump_buffer_command())
+            #Dump buffer commannd
+            if msg.startswith('!dumpbuffer') and (wikibot.userrights(e.user)):
+                c.send(self.command.dump_buffer_command())
 
-        #YouTube information
-        if ('http' and 'youtu' in msg) and (e.user not in ["CPChatBot",  wiki_username]) and self.youtubeinfo:
-            c.send(self.command.youtube_info(e.text))
+            #YouTube information
+            if ('http' and 'youtu' in msg) and (e.user not in ["CPChatBot",  wiki_username]) and self.youtubeinfo:
+                c.send(self.command.youtube_info(e.text))
 
-        #Seen command
-        if msg.startswith('!seen '):
-            if self.seen:
-                if e.user not in userdict:
-                    userdict[e.user] = time.time()
-                c.send(self.command.seen_command(e.user, e.text, userdict, time.time()))  
-            else: 
-                pass
-            
-        #Kicking command
-        if msg.startswith('!kick') and (wikibot.userrights(e.user)):
-	    try:
-	        user = e.text.split(' ', 1)[1]
-                if (wikibot.userrights(user)):
+            #Seen command
+            if msg.startswith('!seen '):
+                if self.seen:
+                    if e.user not in userdict:
+                        userdict[e.user] = time.time()
+                    c.send(self.command.seen_command(e.user, e.text, userdict, time.time()))  
+                else: 
                     pass
+            
+            #Kicking command
+            if msg.startswith('!kick') and (wikibot.userrights(e.user)):
+	        try:
+	            user = e.text.split(' ', 1)[1]
+                    if (wikibot.userrights(user)):
+                        pass
+                    else:
+	                c.kick_user(user)
+	        except IndexError:
+	            pass
+       
+            #Swear filter
+            #if self.command.swear_filter(msg) and not (wikibot.userrights(e.user)):
+            #    c.kick_user(e.user)	         
+       
+            #Log updater command
+            if msg.startswith('!updatelogs') and (wikibot.userrights(e.user)) and self.logger_on:
+                self.th.cancel()
+                c.send(self.command.update_command(e.user))
+                self.updated = True
+       
+            #Adds users to the user dictionary, for the !seen command
+            if e.user not in userdict or e.user in userdict:
+                userdict[e.user] = time.time()          
+       
+            #????
+            if msg.startswith('!gauss '):
+                cond = e.text.replace("!gauss ", "")
+                cond = cond.split(", ")
+                try:
+	            x = cond[0]
+                    y = cond[1]
+                    z = cond[2]
+                    c.send(self.command.gauss_progression(int(x), int(y), int(z)))
+                except IndexError or ValueError:
+	            pass
+       
+            if ('https://twitter.com/' in msg) and self.twitterinfo:
+                c.send(self.command.twitter_info(e.text))
+            
+            if msg.startswith('!ignore ') and (wikibot.userrights(e.user)):
+                ignore_user =  e.text.split(' ', 1)[1]
+                if e.user == ignore_user:
+                    c.send("{}: You cannot ignore yourself.".format(e.user))
                 else:
-	            c.kick_user(user)
-	    except IndexError:
-	        pass
-       
-        #Swear filter
-        #if self.command.swear_filter(msg) and not (wikibot.userrights(e.user)):
-        #    c.kick_user(e.user)	         
-       
-        #Log updater command
-        if msg.startswith('!updatelogs') and (wikibot.userrights(e.user)) and self.logger_on:
-            self.th.cancel()
-            c.send(self.command.update_command(e.user))
-            self.updated = True
-       
-        #Adds users to the user dictionary, for the !seen command
-        if e.user not in userdict or e.user in userdict:
-            userdict[e.user] = time.time()          
-       
-        #????
-        if msg.startswith('!gauss '):
-	    cond = e.text.replace("!gauss ", "")
-            cond = cond.split(", ")
-            try:
-	        x = cond[0]
-                y = cond[1]
-                z = cond[2]
-                c.send(self.command.gauss_progression(int(x), int(y), int(z)))
-            except IndexError or ValueError:
-	        pass
-       
-        if ('https://twitter.com/' in msg) and self.twitterinfo:
-            c.send(self.command.twitter_info(e.text))
-     
+                    ignored.append(ignore_user)
+                    c.send("{}: Now ignoring {}.".format(e.user, ignore_user))
+        else:
+            pass
+        
     def format_message(self, **kwargs):
 	f = codecs.open('ChatBot.txt', 'a', encoding = 'utf-8')
         time = '[{}-{:02}-{:02} {:02}:{:02}:{:02}]'.format(datetime.utcnow().year, datetime.utcnow().month, datetime.utcnow().day, datetime.utcnow().hour, datetime.utcnow().minute, datetime.utcnow().second)

@@ -249,16 +249,16 @@ class Client(object):
         response = request.content
         if "\x00\x02\xff40" in response:
             self.socket_connect()
-            match = re.findall("\x00\x02\xff40\x00.*\xff42(.*)", response)
+            match = re.findall("\x00\x02\xff40\x00.*\xff42(.*)]", response)
             try:
-                content = json.loads( match[0] )
+                content = json.loads( match[0]+']' )
                 return content
             except:
                 return "\x00\x02\xff40" 
         
         elif "\xff42[" in response:
-            match = re.findall("\x00.*\xff42(.*)", response)
-            content = json.loads( match[0] )
+            match = re.findall("\x00.*\xff42(.*)]", response)
+            content = json.loads( match[0]+']' )
             return content
         
         else:

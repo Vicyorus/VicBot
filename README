@@ -27,3 +27,5 @@ Commands:
 * !kick
 * !updatelogs
 * !gauss
+* !ignore
+* !unignore

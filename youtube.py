@@ -16,7 +16,7 @@ class YouTube(object):
         query = urlparse(value)
         if query.hostname == 'youtu.be':
             return query.path[1:]
-        if query.hostname in ('www.youtube.com', 'youtube.com'):
+        if query.hostname in ('www.youtube.com', 'youtube.com', 'm.youtube.com'):
             if query.path == '/watch':
                 p = parse_qs(query.query)
                 return p['v'][0]

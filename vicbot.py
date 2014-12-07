@@ -44,7 +44,7 @@ class VicBot(chatbot.ChatBot):
         chatbot.ChatBot.__init__(self, wiki_username, wiki_password, wiki_name)
         self.command = command(self, wiki_username, wiki_password)
         self.last_updated = time.time()
-        self.logger_on = False 
+        self.logger_on = True
         self.hello_status = True
         self.youtubeinfo = True
         self.twitterinfo = True
@@ -160,7 +160,8 @@ class VicBot(chatbot.ChatBot):
        
             #Quit command
             if msg.startswith('!quit') and (wikibot.userrights(e.user)):
-                sys.exit(1)
+                c.send("{}: Now exiting chat...".format(e.user))
+                c.disconnect()
 
             #Updated command
             if msg.startswith('!updated') and (wikibot.userrights(e.user)):
@@ -168,7 +169,7 @@ class VicBot(chatbot.ChatBot):
        
             #Logs command
             if msg.startswith('!logs'):
-                c.send(self.command.log_command())
+                c.send(self.command.log_command(e.user))
 
             #Dump buffer commannd
             if msg.startswith('!dumpbuffer') and (wikibot.userrights(e.user)):
@@ -231,9 +232,21 @@ class VicBot(chatbot.ChatBot):
                 ignore_user =  e.text.split(' ', 1)[1]
                 if e.user == ignore_user:
                     c.send("{}: You cannot ignore yourself.".format(e.user))
+                elif ignore_user in ignored:
+                    c.send("{}: Already ignoring {}.".format(e.user, ignore_user))
+                elif wikibot.userrights(ignore_user):
+                    c.send("{}: Cannot ignore {}, he is a moderator.".format(e.user, ignore_user))
                 else:
                     ignored.append(ignore_user)
                     c.send("{}: Now ignoring {}.".format(e.user, ignore_user))
+                    
+            if msg.startswith('!unignore ') and (wikibot.userrights(e.user)):
+                ignore_user =  e.text.split(' ', 1)[1]
+                if ignore_user not in ignored:
+                    c.send("{}: I am not currently ignoring {}.".format(e.user, ignore_user))
+                else:
+                    ignored.remove(ignore_user)
+                    c.send("{}: {} is no longer being ignored.".format(e.user, ignore_user))
         else:
             pass
         

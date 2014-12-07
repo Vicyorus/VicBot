@@ -37,20 +37,23 @@ class command(object):
         return 'Log file cleared'
 
     #Logs command. Returns the link to the logs page.
-    def log_command(self):
-        return "Logs can be seen [[Project:Chat/Logs|here]]."
+    def log_command(self, user):
+        return "{}: Logs can be seen [[Project:Chat/Logs|here]].".format(user)
 
     #YouTube information function. Returns a string with information about a video.
     def youtube_info(self, message):
         try:
             url = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message)
             url2 = url[0]
-            yt = youtube.YouTube(url2)
-            return yt.video_information
+            if ('youtube.com' in url2 and 'watch?v=' in url2) or ('youtu.be' in url2):
+                yt = youtube.YouTube(url2)
+                return yt.video_information
+            else:
+                pass
         except urllib2.HTTPError as err:
             if err.code == 404 or err.code == 403:
                 pass
-        except IndexError:
+        except IndexError or TypeError:
             pass
 
     #Update command function. Updates the logs to the current log page.
@@ -58,7 +61,7 @@ class command(object):
         with open('ChatBot.txt') as f:
             log_file = len(f.readlines())
             self.update_logs(user)
-            return '[[Project:Chat/Logs/%s|Logs]] updated (uploaded %d lines to the page).' % (time.strftime('%d %B %Y', time.gmtime()), log_file)
+            return '{}: [[Project:Chat/Logs/{}|Logs]] updated (uploaded {} lines to the page).'.format(user, time.strftime('%d %B %Y', time.gmtime()), log_file)
   
     #Seen command. Tells the last time a certain user spoke.
     def seen_command(self, user, message, dictionary, time):

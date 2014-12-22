@@ -10,9 +10,10 @@ import twitter
 
 class command(object):
     def __init__(self, vicbot, username, password):
-        self.vicbot = vicbot
+        self.c = vicbot
         self.username = username
         self.password = password
+        wikibot.login(self.username, self.password)
     
     #Hello command function. Returns "Hello there"
     def hello_command(self, message):
@@ -22,18 +23,17 @@ class command(object):
             return 'Hello there,%s' % message[6:]
 
     #Updated command function. Returns the size of the log file and the last time it was updated (in case it was previously updated).
-    def updated_command(self, user, timesec, updated):
-        desired_time = int(time.time() - timesec)
+    def updated_command(self, user):
+        desired_time = int(time.time() - self.c.last_updated)
         with open('ChatBot.txt') as f:
-            if updated == False:
-                return "%s: The logs haven't been updated since I logged in. There are currently ~%d lines in the log buffer." % (user, len(f.readlines()))
-            if updated:
-                return '%s: The logs were last updated %s ago. There are currently ~%d lines in the log buffer.' % (user, GetInHMS(desired_time, '%02d:%02d', 2), len(f.readlines()))
+            if self.c.updated:
+                return '{}: The logs were last updated {} ago. There are currently ~{} lines in the log buffer.'.format(user, GetInHMS(desired_time, '%02d:%02d', 2), len(f.readlines()))
+            else:
+                return "{}: The logs haven't been updated since I logged in. There are currently ~{} lines in the log buffer.".format(user, len(f.readlines()))  
   
     #Dump buffer function. Clears the logfile, useful for spam attacks
     def dump_buffer_command(self):
-        with open('ChatBot.txt', 'w') as file:
-            pass
+        open('ChatBot.txt', 'w').close()
         return 'Log file cleared'
 
     #Logs command. Returns the link to the logs page.
@@ -59,11 +59,12 @@ class command(object):
     #Update command function. Updates the logs to the current log page.
     def update_command(self, user):
         with open('ChatBot.txt') as f:
+            #Leave the variable in here
             log_file = len(f.readlines())
             self.update_logs(user)
             return '{}: [[Project:Chat/Logs/{}|Logs]] updated (uploaded {} lines to the page).'.format(user, time.strftime('%d %B %Y', time.gmtime()), log_file)
   
-    #Seen command. Tells the last time a certain user spoke.
+    #Seen command. Tells the last time a certain user was seen in chat.
     def seen_command(self, user, message, dictionary, time):
         seen_user = message.split(' ', 1)[1]
         if seen_user in dictionary:
@@ -77,7 +78,6 @@ class command(object):
 
     #Log updater function.
     def update_logs(self, user=None):
-        wikibot.login(self.username, self.password)
         f = codecs.open('ChatBot.txt', 'r', encoding='utf-8')
         a = f.read()
         f.close()
@@ -90,6 +90,7 @@ class command(object):
         try:
             cut = wikibot.edit(logger_page)
             text = cut[:-36]
+            #text = re.search('<pre class=\"ChatLog\"\>(.*)</pre>', cut, re.DOTALL).group(0)
         except KeyError:
             text = ''
         if text:
@@ -98,14 +99,15 @@ class command(object):
         else:
             new_text = '<pre class="ChatLog">\n' + a.replace('<', '&lt;').replace('>', '&gt;') + '</pre>\n[[Category:Wikia Chat logs]]'
             wikibot.save(logger_page, new_text, summary=summary)
-        w = open('ChatBot.txt', 'w')
-        w.write('')
-        w.close()
-        wikibot.logout()
+        
+        #Clearing the log file
+        open('ChatBot.txt', 'w').close()
+        
+        
         #Modify some important values on the client
-        self.vicbot.updated = True
-        self.vicbot.last_updated = time.time()
-        self.vicbot.log_thread()
+        self.c.updated = True
+        self.c.last_updated = time.time()
+        self.c.log_thread()
         
     
     #Gauss command. Sums all the numbers on a secuence from 'x' to 'y' with a difference of 'z'.  
@@ -131,3 +133,6 @@ class command(object):
                 pass
         except IndexError:
             pass
+        
+    def tell_say(self, user, tell):
+        return "{0}, {1} told you: {2}".format(user, tell[user]['user'], tell[user]['text'])  

@@ -27,15 +27,27 @@ from datetime import datetime
 import wikibot
 from command import command
 import threading
+import json
 
 #VARIABLES AND MISC.
-wiki_username = sys.argv[1]
-wiki_password = sys.argv[2]
-wiki_name = 'http://' + sys.argv[3] +  '.wikia.com/'
+try:
+    config_file = json.loads( open('config.json').read() )
+except:
+    print "Error while reading the config file. Exiting..."
+    sys.exit(1)
+
+wiki_username = config_file['user']
+wiki_password = config_file['password']
+wiki_name = 'http://' + config_file['wiki'] +  '.wikia.com/'
 wikibot.site(wiki_name)
 
 initial_time = time.time()
 userdict = {}
+try:
+    tell = json.loads( codecs.open('tell.json', 'r').read() )
+except:
+    tell = {}
+    
 ignored = []
 #END OF VARIABLES
 
@@ -49,6 +61,7 @@ class VicBot(chatbot.ChatBot):
         self.youtubeinfo = True
         self.twitterinfo = True
         self.seen = True
+        self.tell = True
         self.new_day = False
         self.updated = False
         self.log_thread()
@@ -104,6 +117,11 @@ class VicBot(chatbot.ChatBot):
         if (self.logger_on):
 	    self.format_message(user=e.user,text=e.text,event='message')
             
+        if tell.has_key(e.user) and self.tell:
+            c.send(self.command.tell_say(e.user, tell))
+            del tell[e.user]
+            open('tell.json', 'w').write( json.dumps( tell ) )
+            
         #Prints the messages on the console
         print u'%s <%s>: %s' % (time.strftime('%H:%M', time.gmtime()), e.user, e.text)
         
@@ -149,6 +167,14 @@ class VicBot(chatbot.ChatBot):
             elif msg.startswith('!twoff') and self.twitterinfo and (wikibot.userrights(e.user)):
                 self.twitterinfo = False
 	        c.send('Twitter information is OFF')
+	        
+	    #Hello command switch
+            if msg.startswith('!tellon') and not self.tell and (wikibot.userrights(e.user)):
+                self.tell = True
+                c.send('The !tell command is ON')
+            elif msg.startswith('!telloff') and self.tell and (wikibot.userrights(e.user)):
+                self.tell = False
+                c.send('The !tell command is OFF')
        
             #Hello command
             if msg.startswith('!hello') and self.hello_status:
@@ -165,7 +191,7 @@ class VicBot(chatbot.ChatBot):
 
             #Updated command
             if msg.startswith('!updated') and (wikibot.userrights(e.user)):
-                c.send(self.command.updated_command(e.user, self.last_updated, self.updated))
+                c.send(self.command.updated_command(e.user))
        
             #Logs command
             if msg.startswith('!logs'):
@@ -247,6 +273,20 @@ class VicBot(chatbot.ChatBot):
                 else:
                     ignored.remove(ignore_user)
                     c.send("{}: {} is no longer being ignored.".format(e.user, ignore_user))
+                    
+            #Tell command    
+            if msg.startswith('!tell ') and self.tell:
+                split_text = e.text.split(' ', 2)
+                tell_user = split_text[1].replace('_', ' ')
+                message = split_text[2]
+                if tell_user == e.user:
+                    c.send('{}: You cannot leave yourself a message.'.format(e.user))
+                elif tell_user == wiki_username:
+                    c.send('{}: Thank you for the message! :3'.format(e.user))
+                else:
+                    tell[tell_user] = {'user': e.user, 'text': message}
+                    codecs.open('tell.json', 'w').write( json.dumps(tell) )
+                    c.send('{}: I will tell {} your message the next time I see him.'.format(e.user, tell_user))
         else:
             pass
         

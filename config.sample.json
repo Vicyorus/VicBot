@@ -1,5 +1,5 @@
 {
-  "user":"",
-  "password":"",
-  "wiki":""
+  "user":"username",
+  "password":"password",
+  "wiki":"community"
 }

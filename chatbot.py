@@ -245,20 +245,18 @@ class Client(object):
         return str(int(round(unix, 0)))
 
     def __connection(self):
-        request = self.get()
-        response = request.content
+        response = self.get().content
         if "\x00\x02\xff40" in response:
             self.socket_connect()
-            match = re.findall("\x00\x02\xff40\x00.*\xff42(.*)]", response)
+            match = re.findall('\x00\x02\xff40\x00.*\xff42\[.*?,(.*)\]', response)
             try:
-                content = json.loads( match[0]+']' )
+                content = json.loads( match[0] )
                 return content
             except:
                 return "\x00\x02\xff40" 
-        
         elif "\xff42[" in response:
-            match = re.findall("\x00.*\xff42(.*)]", response)
-            content = json.loads( match[0]+']' )
+            match = re.findall('\x00.*\xff42\[.*?,(.*)\]', response)
+            content = json.loads( match[0] )
             return content
         
         else:
@@ -346,7 +344,6 @@ class ChatBot(Thread):
                 print "Error: Session ID unknown"
                 self.c.restart()
             else:
-                content = content[1]
                 e = Event(content)
                 if content["event"] == "join":
                     self.on_join(self.c, e)

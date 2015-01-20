@@ -118,7 +118,8 @@ class VicBot(chatbot.ChatBot):
 	    self.format_message(user=e.user,text=e.text,event='message')
             
         if tell.has_key(e.user) and self.tell:
-            c.send(self.command.tell_say(e.user, tell))
+            for message in tell[e.user]:
+                c.send(self.command.tell_say(e.user, message))
             del tell[e.user]
             open('tell.json', 'w').write( json.dumps( tell ) )
             
@@ -284,7 +285,10 @@ class VicBot(chatbot.ChatBot):
                 elif tell_user == wiki_username:
                     c.send('{}: Thank you for the message! :3'.format(e.user))
                 else:
-                    tell[tell_user] = {'user': e.user, 'text': message}
+                    if tell.has_key(tell_user):
+                        tell[tell_user].append({'user': e.user, 'text': message})
+                    else:
+                        tell[tell_user] = [{'user': e.user, 'text': message}]
                     codecs.open('tell.json', 'w').write( json.dumps(tell) )
                     c.send('{}: I will tell {} your message the next time I see him.'.format(e.user, tell_user))
         else:

@@ -5,7 +5,6 @@ import urllib2
 from timer import GetInHMS, seen
 import wikibot
 import codecs
-from datetime import datetime
 import twitter
 
 class command(object):
@@ -81,7 +80,6 @@ class command(object):
         f = codecs.open('ChatBot.txt', 'r', encoding='utf-8')
         a = f.read()
         f.close()
-        utc = datetime.utcnow()
         logger_page = 'Project:Chat/Logs/' + time.strftime('%d %B %Y', time.gmtime())
         if user is not None:
             summary = 'Updating chat logs (requested by [[User:' + user + '|' + user + ']])'
@@ -89,15 +87,14 @@ class command(object):
             summary = 'Updating chat logs'
         try:
             cut = wikibot.edit(logger_page)
-            text = cut[:-36]
-            #text = re.search('<pre class=\"ChatLog\"\>(.*)</pre>', cut, re.DOTALL).group(0)
-        except KeyError:
+            text = re.findall('(.*)\</pre\>', cut, re.DOTALL)[0]
+        except:
             text = ''
         if text:
-            new_text = text + '\n' + a.replace('<', '&lt;').replace('>', '&gt;') + '</pre>\n[[Category:Wikia Chat logs]]'
+            new_text = text + a.replace('<', '&lt;').replace('>', '&gt;') + '</pre>\n[[Category:Wikia Chat logs|{0}]]'.format(time.strftime('%Y %m %d', time.gmtime()))
             wikibot.save(logger_page, new_text, summary=summary)
         else:
-            new_text = '<pre class="ChatLog">\n' + a.replace('<', '&lt;').replace('>', '&gt;') + '</pre>\n[[Category:Wikia Chat logs]]'
+            new_text = '<pre class="ChatLog">\n' + a.replace('<', '&lt;').replace('>', '&gt;') + '</pre>\n[[Category:Wikia Chat logs|{0}]]'.format(time.strftime('%Y %m %d', time.gmtime()))
             wikibot.save(logger_page, new_text, summary=summary)
         
         #Clearing the log file
@@ -135,4 +132,4 @@ class command(object):
             pass
         
     def tell_say(self, user, tell):
-        return "{0}, {1} told you: {2}".format(user, tell[user]['user'], tell[user]['text'])  
+        return "{0}, {1} told you: {2}".format(user, tell['user'], tell['text'])  

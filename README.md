@@ -30,16 +30,16 @@ Commands
 | `!twoff` | Turns Twitter tweet information off.
 | `!tellon` | Turns the `!tell` command on.
 | `!telloff` | Turns the `!tell` command off.
-| `!hello [*message*]` | Says "Hello". If followed by `message`, will say "Hello, `message`".
+| `!hello [message]` | Says "Hello". If followed by `message`, will say "Hello, `message`".
 | `!bye` | Says "Goodbye!".
 | `!quit` | Makes the bot exit the chat.
 | `!updated` | Gives information about how long ago were the logs updated and how many lines are in disk.
 | `!logs` | Links the logs page.
 | `!dumpbuffer` | Clears the logfile.
-| `!seen *user*` | Gives the last time the bot "saw" the `user`.
-| `!kick *user*` | Kicks `user` from chat.
+| `!seen user` | Gives the last time the bot "saw" the `user`.
+| `!kick user` | Kicks `user` from chat.
 | `!updatelogs` | Updates the logs.
-| `!gauss *x*, *y*, *z*` | Gives the sum of all the numbers from `x` to `y` with a common difference of `z`. 
-| `!ignore *user*` | Makes the bot ignore any commands used by `user`.
-| `!unignore *user*` | Makes the bot accept any command used by `user`.
-| `!tell *user* *message*` | Sends a `message` to `user` the next time the bot sees them.
+| `!gauss x, y, z` | Gives the sum of all the numbers from `x` to `y` with a common difference of `z`. 
+| `!ignore user` | Makes the bot ignore any commands used by `user`.
+| `!unignore user` | Makes the bot accept any command used by `user`.
+| `!tell user message` | Sends a `message` to `user` the next time the bot sees them.

@@ -30,8 +30,7 @@ import sys
 import time
 import json
 import urllib
-from threading import Timer, Thread
-import cookielib
+from threading import Thread
 import urllib2
 import os
 from event import Event
@@ -46,9 +45,6 @@ running = True
 class Client(object):
     def __init__(self, username, password, site):
         self.wiki_path = site + "wikia.php?controller=Chat&format=json"
-        
-        #Cookie jar
-        self.cookie_jar = cookielib.CookieJar()
         
         #HTTP opener
         self.opener = requests.Session()

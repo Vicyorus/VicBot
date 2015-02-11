@@ -8,6 +8,7 @@ def GetInHMS(seconds, hms, value):
     elif value == 2:
         return hms % (minutes, seconds)
 
+
 def seen(user, seconds):
     hours = seconds / 3600
     seconds -= 3600*hours
@@ -24,14 +25,14 @@ def seen(user, seconds):
     if minutes == 1:
         mns = "minute"
     else:
-        mns = "minutes" 
-        
+        mns = "minutes"
+
     if hours == 0 and minutes == 0 and seconds != 0:
         return "I last saw %s %d %s ago." % (user, seconds, scs)
     elif hours == 0 and minutes != 0 and seconds == 0:
         return "I last saw %s %d %s ago." % (user, minutes, mns)
     elif hours != 0 and minutes == 0 and seconds == 0:
-        return "I last saw %s %d %s ago." % (user, hours, hrs) 
+        return "I last saw %s %d %s ago." % (user, hours, hrs)
     elif hours == 0 and minutes != 0 and seconds != 0:
         return "I last saw %s %d %s and %d %s ago." % (user, minutes, mns, seconds, scs)
     elif hours != 0 and minutes != 0 and seconds != 0:

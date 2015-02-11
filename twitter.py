@@ -6,8 +6,8 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-class Twitter(object):
 
+class Twitter(object):
     def __init__(self, url):
         self.tweet_id = url[-18:]
         self.tweet = urllib2.urlopen('https://api.twitter.com/1/statuses/oembed.json?id=' + str(self.tweet_id)).read()
@@ -34,7 +34,7 @@ class Twitter(object):
             return user
 
     def tweet_date(self):
-        r = re.compile('{0}">(.*?)</a></blockquote>'.format(self.tweet_id))
+        r = re.compile('\d+">(.*?)</a></blockquote>')
         m = r.search(self.tweet['html'])
         if m:
             date = m.group(1)

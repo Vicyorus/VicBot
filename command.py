@@ -7,13 +7,14 @@ import wikibot
 import codecs
 import twitter
 
+
 class command(object):
     def __init__(self, vicbot, username, password):
         self.c = vicbot
         self.username = username
         self.password = password
         wikibot.login(self.username, self.password)
-    
+
     #Hello command function. Returns "Hello there"
     def hello_command(self, message):
         if message[6:] == '':
@@ -28,8 +29,8 @@ class command(object):
             if self.c.updated:
                 return '{}: The logs were last updated {} ago. There are currently ~{} lines in the log buffer.'.format(user, GetInHMS(desired_time, '%02d:%02d', 2), len(f.readlines()))
             else:
-                return "{}: The logs haven't been updated since I logged in. There are currently ~{} lines in the log buffer.".format(user, len(f.readlines()))  
-  
+                return "{}: The logs haven't been updated since I logged in. There are currently ~{} lines in the log buffer.".format(user, len(f.readlines()))
+
     #Dump buffer function. Clears the logfile, useful for spam attacks
     def dump_buffer_command(self):
         open('ChatBot.txt', 'w').close()
@@ -62,7 +63,7 @@ class command(object):
             log_file = len(f.readlines())
             self.update_logs(user)
             return '{}: [[Project:Chat/Logs/{}|Logs]] updated (uploaded {} lines to the page).'.format(user, time.strftime('%d %B %Y', time.gmtime()), log_file)
-  
+
     #Seen command. Tells the last time a certain user was seen in chat.
     def seen_command(self, user, message, dictionary, time):
         seen_user = message.split(' ', 1)[1]
@@ -96,32 +97,19 @@ class command(object):
         else:
             new_text = '<pre class="ChatLog">\n' + a.replace('<', '&lt;').replace('>', '&gt;') + '</pre>\n[[Category:Wikia Chat logs|{0}]]'.format(time.strftime('%Y %m %d', time.gmtime()))
             wikibot.save(logger_page, new_text, summary=summary)
-        
+
         #Clearing the log file
         open('ChatBot.txt', 'w').close()
-        
-        
+
         #Modify some important values on the client
         self.c.updated = True
         self.c.last_updated = time.time()
         self.c.log_thread()
-        
-    
-    #Gauss command. Sums all the numbers on a secuence from 'x' to 'y' with a difference of 'z'.  
-    def gauss_progression(self, x, y, z):
-        if z != 0:
-            if z > 0 and y > x or z < 0 and x > y:
-                num = ((y - x) / z + 1) * (x + y) / 2
-                return 'The sum of all the numbers from %d to %d with a common difference of %d is %d' % (x, y, z, num)
-            else:
-                return 'Incorrect value of first and/or last value of the sequence and/or common difference'
-        else:
-            return 'Incorrect value for common difference'
 
     #Twitter information. Returns a string with information from a specific tweet.
     def twitter_info(self, message):
         try:
-            url = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message)
+            url = re.findall('twitter\.com/(?:#!/)?[^/]+/status(?:es)?/(\d+)', message)
             URL = url[0]
             t = twitter.Twitter(URL)
             return t.tweet_info
@@ -130,6 +118,6 @@ class command(object):
                 pass
         except IndexError:
             pass
-        
+
     def tell_say(self, user, tell):
-        return "{0}, {1} told you: {2}".format(user, tell['user'], tell['text'])  
+        return "{0}, {1} told you: {2}".format(user, tell['user'], tell['text'])

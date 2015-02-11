@@ -208,10 +208,9 @@ class Client(object):
         ping_thr.start()
 
     def socket_ping(self):
-        time.sleep(24)
-        self.post('ping')
-        self.socket_ping()
-        return
+        while True:
+            self.post('ping')
+            time.sleep(24)
 
     #Encoding functions
     #Used to encode information that's being sent to the server
@@ -241,16 +240,15 @@ class Client(object):
         running = False
         self.post({'msgType': 'command', 'command': 'logout'})
         if not nodisconnect:
-            sys.exit(1)
+            sys.exit(0)
         return
 
 
-class ChatBot(Thread):
+class ChatBot(object):
     def __init__(self, username, password, site):
         self.username = username
         self.password = password
         self.c = Client(username, password, site)
-        Thread.__init__(self)
 
     def on_join(self, c, e):
         pass
@@ -267,7 +265,7 @@ class ChatBot(Thread):
     def on_ban(self, c, e):
         pass
 
-    def run(self):
+    def start(self):
         while running:
             content = self.c.connection()
             if content in ("\x00\x02\xff40", "\x00\x01\xff3"):

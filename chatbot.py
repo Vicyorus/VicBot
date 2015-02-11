@@ -191,7 +191,6 @@ class Client(object):
             return content
 
         else:
-            print response
             return response
 
     def connection(self):
@@ -209,7 +208,6 @@ class Client(object):
         ping_thr.start()
 
     def socket_ping(self):
-        print "Pinging chat"
         time.sleep(24)
         self.post('ping')
         self.socket_ping()

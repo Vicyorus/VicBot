@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-###############################################################################
-#                            ___      __________                         
-#                            \  \    /  /  ____/                         
-#                             \  \  /  /  /__                            
-#                              \  \/  /   __/                            
-#                               \    /  /____                             
-#                                \__/_______/                            
-#                                                                       
-#                             VICBOT CLIENT CORE                          
-#                                   MK. II                                
+##############################################################################
+#                            ___      __________
+#                            \  \    /  /  ____/
+#                             \  \  /  /  /__
+#                              \  \/  /   __/
+#                               \    /  /____
+#                                \__/_______/
 #
-#    This program is free software: you can redistribute it and/or modify 
+#                             VICBOT CLIENT CORE
+#                                   MK. II
+#
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -22,8 +22,8 @@
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>. 
-###############################################################################
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##############################################################################
 
 import re
 import sys
@@ -42,10 +42,11 @@ __version__ = 2.0
 #This is used to keep the bot running
 running = True
 
+
 class Client(object):
     def __init__(self, username, password, site):
         self.wiki_path = site + "wikia.php?controller=Chat&format=json"
-        
+
         #HTTP opener
         self.opener = requests.Session()
         self.headers = {
@@ -54,19 +55,19 @@ class Client(object):
             'Content-Type': 'application/octet-stream',
             'Connection': 'keep-alive'
         }
-        
+
         #Basic operations
         self.__login(username, password, site)
         data = self.__wikia_request()
 
-        #Set the settings values 
+        #Set the settings values
         self.settings = {
             'chatkey': data['chatkey'],
             'server': data['nodeInstance'],
             'host': data["nodeHostname"],
             'room': data["roomId"]
         }
-        
+
         #Chat url
         self.chat_url = "http://{}/socket.io/".format(self.settings['host'])
         self.t = 0
@@ -77,11 +78,11 @@ class Client(object):
             'serverId': self.settings['server'],
             'EIO': 2,
             'transport': 'polling'
-        }   
-        
+        }
+
         #Initial
         self.__set_sid(self.settings)
-        
+
     def post(self, data):
         try:
             #This checks if the request is a ping to the server
@@ -89,54 +90,64 @@ class Client(object):
             if data == 'ping':
                 body = self.format_message('2')
             else:
-                body = self.format_message( '42' + json.dumps(['message', json.dumps({'id': None, 'attrs': data})]) )
-            
-            #These lines set the URL and request data 
+                body = self.format_message(
+                    '42' + json.dumps(
+                        ['message',
+                         json.dumps({'id': None, 'attrs': data})]
+                        )
+                    )
+
+            #These lines set the URL and request data
             self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
-            request_data = urllib.urlencode( self.request_data )
+            request_data = urllib.urlencode(self.request_data)
             url = self.chat_url + '?' + request_data
-        
-            #This is the actual call
-            response = self.opener.post( url, data=body, headers=self.headers )
+
+            #POST to the server
+            response = self.opener.post(url, data=body, headers=self.headers)
             self.t += 1
             return response
-        except: #Handle any exception (timeout, connection reset, etc.)
+
+        except:  # Handle any exception (timeout, connection reset, etc.)
             print "An error ocurred. Restarting."
             self.restart()
-            
+
     def get(self):
         try:
-            #These lines set the URL and request data 
+            #Set the URL and request data
             self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
-            request_data = urllib.urlencode( self.request_data )
+            request_data = urllib.urlencode(self.request_data)
             url = self.chat_url + '?' + request_data
-        
-            #This is the actual call
-            response = self.opener.get( url, headers=self.headers )
+
+            #Make the request
+            response = self.opener.get(url, headers=self.headers)
             self.t += 1
             return response
-        except: #Handle any exception (timeout, connection reset, etc.)
+
+        except:  # Handle any exception (timeout, connection reset, etc.)
             print "An error ocurred. Restarting."
             self.restart()
-        
 
     def restart(self):
         python = sys.executable
         os.execl(python, python, * sys.argv)
-        
+
     def __login(self, username, password, wiki):
         login_data = {
             'action': 'login',
             'lgname': username,
             'lgpassword': password,
-            'format':'json'}
+            'format': 'json'}
+
         data = urllib.urlencode(login_data)
-        response = self.opener.post(wiki + "/api.php",data=login_data)
+        response = self.opener.post(wiki + "/api.php", data=login_data)
         content = json.loads(response.content)
+
         login_data['lgtoken'] = content['login']['token']
+
         data = urllib.urlencode(login_data)
-        response = self.opener.post(wiki + "/api.php",data=login_data)
+        response = self.opener.post(wiki + "/api.php", data=login_data)
         content = json.loads(response.content)
+
         if content['login']['result'] != 'Success':
             print 'Couldn\'t log in: Quitting.'
             sys.exit(1)
@@ -150,10 +161,10 @@ class Client(object):
 
     def __set_sid(self, settings):
         response = self.get()
-        
+
         #This should work while the response's length is less than 100
-        content = json.loads( response.content[5:] )
-        
+        content = json.loads(response.content[5:])
+
         #Set the sid for future requests
         self.request_data['sid'] = content['sid']
         return
@@ -164,44 +175,45 @@ class Client(object):
 
     def __connection(self):
         response = self.get().content
+
         if "\x00\x02\xff40" in response:
             self.socket_connect()
-            match = re.findall('\x00\x02\xff40\x00.*\xff42\[.*?,(.*)\]', response)
+            match = re.findall('40\x00.*\xff42\[.*?,(.*)\]', response)
             try:
-                content = json.loads( match[0] )
+                content = json.loads(match[0])
                 return content
             except:
-                return "\x00\x02\xff40" 
+                return "\x00\x02\xff40"
+
         elif "\xff42[" in response:
             match = re.findall('\x00.*\xff42\[.*?,(.*)\]', response)
-            content = json.loads( match[0] )
+            content = json.loads(match[0])
             return content
-        
+
         else:
             return response
- 
+
     def connection(self):
         var = self.__connection()
         return var
-        
 
     #Socket-related functions
     #These functions are related to the response of the server
     #or having to ping the server
     def socket_connect(self):
         print "Logged in to chat!"
+
         ping_thr = Thread(target=self.socket_ping)
-        ping_thr.daemon =True
+        ping_thr.daemon = True
         ping_thr.start()
 
     def socket_ping(self):
-        time.sleep(24)
-        self.post('ping')
-        self.socket_ping()
-        return
- 
+        while True:
+            self.post('ping')
+            time.sleep(24)
+
     #Encoding functions
-    #These functions are used to encode information that's being sent to the server
+    #Used to encode information that's being sent to the server
     def int_to_encoded(self, length):
         payload = ''
         for c in str(length):
@@ -209,33 +221,34 @@ class Client(object):
         return "\x00" + payload + "\xff"
 
     def format_message(self, message):
-        return self.int_to_encoded( len(message) ) + message
+        return self.int_to_encoded(len(message)) + message
 
+    #Action functions
+    #These functions send "actions" to the chat server
+    #(send a message, kick someone, etc.)
     def send(self, message):
-        self.post({'msgType': 'chat', 'text': message})
+        self.post({'msgType': 'chat', 'text': message, 'name': self.request_data['name']})
         return
 
     def kick_user(self, user):
-        self.post({'msgType': 'command', 'command': 'kick', 'userToKick': user})
-        return    
+        self.post(
+            {'msgType': 'command', 'command': 'kick', 'userToKick': user}
+            )
+        return
 
     def disconnect(self, nodisconnect=False):
         running = False
         self.post({'msgType': 'command', 'command': 'logout'})
         if not nodisconnect:
-            sys.exit(1)
+            sys.exit(0)
         return
 
-    def initialize(self):
-       return 
 
-
-class ChatBot(Thread):
+class ChatBot(object):
     def __init__(self, username, password, site):
         self.username = username
         self.password = password
         self.c = Client(username, password, site)
-        Thread.__init__(self)
 
     def on_join(self, c, e):
         pass
@@ -252,8 +265,7 @@ class ChatBot(Thread):
     def on_ban(self, c, e):
         pass
 
-
-    def run(self):
+    def start(self):
         while running:
             content = self.c.connection()
             if content in ("\x00\x02\xff40", "\x00\x01\xff3"):
@@ -275,7 +287,7 @@ class ChatBot(Thread):
                     self.on_ban(self.c, e)
                 elif content["event"] == "chat:add":
                     self.on_message(self.c, e)
-                    
+
 if __name__ == '__main__':
     print("""This file isn't exucutable.
 Please go to http://community.wikia.com/wiki/User:Hairr/Chatbot for information

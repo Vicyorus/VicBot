@@ -29,6 +29,7 @@ from command import command
 import threading
 import json
 
+
 #VARIABLES AND MISC.
 try:
     config_file = json.loads( open('config.json').read() )
@@ -65,11 +66,8 @@ class VicBot(chatbot.ChatBot):
         self.new_day = False
         self.updated = False
         self.log_thread()
-        
-    def on_welcome(self, c, e):
-        print 'Logged in.'
-        c.send('Hello')
                
+
     def on_join(self, c, e):
         if (self.logger_on):
             self.format_message(user=e.user.encode('ascii','ignore'),event='join')
@@ -80,7 +78,8 @@ class VicBot(chatbot.ChatBot):
             c.send("CPChatBot detected back in chat. Updating logs and shutting off logger.")
             self.command.update_command(None)
             self.logger_on = False
-                    
+    
+    
     def on_leave(self, c, e):
         if (e.user == "CPChatBot"):
             self.logger_on = True
@@ -90,12 +89,14 @@ class VicBot(chatbot.ChatBot):
         if (self.logger_on):
 	    self.format_message(user=e.user.encode('ascii','ignore'),event='leave')
         print '%s -!- %s has left Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user)
-
+    
+    
     def on_kick(self, c, e):
         if (self.logger_on):
             self.format_message(user=e.user[0].encode('ascii','ignore'),
                                        mod=e.user[1].encode('ascii','ignore'),event='kick')
         print '%s -!- %s has been kicked by %s from Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user[0], e.user[1]) #Prints a copy on the console
+
 
     def on_ban(self, c, e):
         if (self.logger_on):
@@ -111,7 +112,8 @@ class VicBot(chatbot.ChatBot):
         else:
             print '%s -!- %s was unbanned from Special:Chat by %s' % (time.strftime('%H:%M', time.gmtime()),
                                                                           e.user[0], e.user[1])            
-
+    
+    
     def on_message(self, c, e):
         msg = e.text.lower()
         if (self.logger_on):
@@ -293,7 +295,7 @@ class VicBot(chatbot.ChatBot):
                     c.send('{}: I will tell {} your message the next time I see him.'.format(e.user, tell_user))
         else:
             pass
-        
+
     def format_message(self, **kwargs):
 	f = codecs.open('ChatBot.txt', 'a', encoding = 'utf-8')
         time = '[{}-{:02}-{:02} {:02}:{:02}:{:02}]'.format(datetime.utcnow().year, datetime.utcnow().month, datetime.utcnow().day, datetime.utcnow().hour, datetime.utcnow().minute, datetime.utcnow().second)

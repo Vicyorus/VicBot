@@ -1,4 +1,6 @@
 import json
+
+
 class Event(object):
     def __init__(self, connection):
         self.connection = self.parse(connection)

@@ -227,7 +227,7 @@ class Client(object):
     #These functions send "actions" to the chat server
     #(send a message, kick someone, etc.)
     def send(self, message):
-        self.post({'msgType': 'chat', 'text': message})
+        self.post({'msgType': 'chat', 'text': message, 'name': self.request_data['name']})
         return
 
     def kick_user(self, user):

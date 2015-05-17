@@ -29,6 +29,7 @@ from command import command
 import threading
 import json
 
+
 #VARIABLES AND MISC.
 try:
     config_file = json.loads(open('config.json').read())
@@ -64,10 +65,14 @@ class VicBot(chatbot.ChatBot):
         self.new_day = False
         self.updated = False
         self.log_thread()
+<<<<<<< HEAD
 
     def on_welcome(self, c, e):
         print 'Logged in.'
         c.send('Hello')
+=======
+               
+>>>>>>> dev
 
     def on_join(self, c, e):
         if (self.logger_on):
@@ -79,7 +84,12 @@ class VicBot(chatbot.ChatBot):
             c.send("CPChatBot detected back in chat. Updating logs and shutting off logger.")
             self.command.update_command(None)
             self.logger_on = False
+<<<<<<< HEAD
 
+=======
+    
+    
+>>>>>>> dev
     def on_leave(self, c, e):
         if (e.user == "CPChatBot"):
             self.logger_on = True
@@ -89,7 +99,8 @@ class VicBot(chatbot.ChatBot):
         if (self.logger_on):
             self.format_message(user=e.user.encode('ascii', 'ignore'), event='leave')
         print '%s -!- %s has left Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user)
-
+    
+    
     def on_kick(self, c, e):
         if (self.logger_on):
             self.format_message(user=e.user[0].encode('ascii', 'ignore'),
@@ -97,6 +108,7 @@ class VicBot(chatbot.ChatBot):
                                 event='kick')
 
         print '%s -!- %s has been kicked by %s from Special:Chat.' % (time.strftime('%H:%M', time.gmtime()), e.user[0], e.user[1])  # Prints a copy on the console
+
 
     def on_ban(self, c, e):
         if (self.logger_on):
@@ -114,8 +126,14 @@ class VicBot(chatbot.ChatBot):
                                                                                    e.user[0], e.time, e.user[1])
         else:
             print '%s -!- %s was unbanned from Special:Chat by %s' % (time.strftime('%H:%M', time.gmtime()),
+<<<<<<< HEAD
                                                                       e.user[0], e.user[1])
 
+=======
+                                                                          e.user[0], e.user[1])            
+    
+    
+>>>>>>> dev
     def on_message(self, c, e):
         msg = e.text.lower()
         if (self.logger_on):

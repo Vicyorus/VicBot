@@ -65,14 +65,7 @@ class VicBot(chatbot.ChatBot):
         self.new_day = False
         self.updated = False
         self.log_thread()
-<<<<<<< HEAD
 
-    def on_welcome(self, c, e):
-        print 'Logged in.'
-        c.send('Hello')
-=======
-               
->>>>>>> dev
 
     def on_join(self, c, e):
         if (self.logger_on):
@@ -84,12 +77,8 @@ class VicBot(chatbot.ChatBot):
             c.send("CPChatBot detected back in chat. Updating logs and shutting off logger.")
             self.command.update_command(None)
             self.logger_on = False
-<<<<<<< HEAD
 
-=======
-    
-    
->>>>>>> dev
+
     def on_leave(self, c, e):
         if (e.user == "CPChatBot"):
             self.logger_on = True
@@ -125,15 +114,9 @@ class VicBot(chatbot.ChatBot):
             print '%s -!- %s was banned from Special:Chat for %s seconds by %s' % (time.strftime('%H:%M', time.gmtime()),
                                                                                    e.user[0], e.time, e.user[1])
         else:
-            print '%s -!- %s was unbanned from Special:Chat by %s' % (time.strftime('%H:%M', time.gmtime()),
-<<<<<<< HEAD
-                                                                      e.user[0], e.user[1])
+            print '%s -!- %s was unbanned from Special:Chat by %s' % (time.strftime('%H:%M', time.gmtime()), e.user[0], e.user[1])
 
-=======
-                                                                          e.user[0], e.user[1])            
-    
-    
->>>>>>> dev
+
     def on_message(self, c, e):
         msg = e.text.lower()
         if (self.logger_on):

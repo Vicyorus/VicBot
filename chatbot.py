@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-##############################################################################
+##############################################################################  
 #                            ___      __________
 #                            \  \    /  /  ____/
 #                             \  \  /  /  /__
@@ -34,6 +34,7 @@ from threading import Thread
 import urllib2
 import os
 from event import Event
+from cookielib import LWPCookieJar
 
 import requests
 
@@ -46,18 +47,29 @@ running = True
 class Client(object):
     def __init__(self, username, password, site):
         self.wiki_path = site + "wikia.php?controller=Chat&format=json"
-
-        #HTTP opener
-        self.opener = requests.Session()
+        
         self.headers = {
             'User-Agent': 'vicbot v.2.0.0',
             'Accept': '*/*',
             'Content-Type': 'application/octet-stream',
             'Connection': 'keep-alive'
         }
-
-        #Basic operations
-        self.__login(username, password, site)
+        
+        #HTTP opener
+        self.opener = requests.Session()
+        
+        # Set the cookies of the session
+        self.opener.cookies = LWPCookieJar('cookiejar')
+        
+        # If there are no cookies set (at least from the MW API), we set them
+        if not os.path.exists("cookiejar"):
+            self.__login(username, password, site)
+        
+        # Else, we just load them from the file
+        else:
+            self.opener.cookies.load(ignore_discard=True)
+        
+       
         data = self.__wikia_request()
 
         #Set the settings values
@@ -82,6 +94,7 @@ class Client(object):
 
         #Initial
         self.__set_sid(self.settings)
+
 
     def post(self, data):
         try:
@@ -111,6 +124,7 @@ class Client(object):
             print "An error ocurred. Restarting."
             self.restart()
 
+
     def get(self):
         try:
             #Set the URL and request data
@@ -127,9 +141,11 @@ class Client(object):
             print "An error ocurred. Restarting."
             self.restart()
 
+
     def restart(self):
         python = sys.executable
         os.execl(python, python, * sys.argv)
+        
 
     def __login(self, username, password, wiki):
         login_data = {
@@ -139,12 +155,14 @@ class Client(object):
             'format': 'json'}
 
         data = urllib.urlencode(login_data)
+        
         response = self.opener.post(wiki + "/api.php", data=login_data)
         content = json.loads(response.content)
 
         login_data['lgtoken'] = content['login']['token']
 
         data = urllib.urlencode(login_data)
+        
         response = self.opener.post(wiki + "/api.php", data=login_data)
         content = json.loads(response.content)
 
@@ -153,6 +171,7 @@ class Client(object):
             sys.exit(1)
         else:
             print "Connected as: {}".format(username)
+            self.opener.cookies.save()
 
     def __wikia_request(self):
         response = self.opener.get(self.wiki_path)

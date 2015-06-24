@@ -1,11 +1,14 @@
-#Ignore all the .pyc files
+# Ignore all the .pyc files
 *.pyc
 
-#Ignore all the .json files...
+# Ignore all the .json files...
 *.json
 
-#...except for the config.sample one
+# ...except for the config.sample one
 !config.sample.json
 
-#Ignore the logging file
+# Ignore the logging file
 ChatBot.txt
+
+# And the cookies file
+cookiejar

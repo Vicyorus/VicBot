@@ -109,12 +109,13 @@ class Client(object):
                          json.dumps({'id': None, 'attrs': data})]
                         )
                     )
-
+            
+            
             #These lines set the URL and request data
             self.request_data['t'] = "{}-{}".format(self.__timestamp(), self.t)
             request_data = urllib.urlencode(self.request_data)
             url = self.chat_url + '?' + request_data
-
+            
             #POST to the server
             response = self.opener.post(url, data=body, headers=self.headers)
             self.t += 1

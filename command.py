@@ -6,7 +6,7 @@ from timer import GetInHMS, seen
 import wikibot
 import codecs
 import twitter
-
+import random
 
 class command(object):
     def __init__(self, vicbot, username, password):
@@ -119,5 +119,30 @@ class command(object):
         except IndexError:
             pass
 
+    
     def tell_say(self, user, tell):
         return "{0}, {1} told you: {2}".format(user, tell['user'], tell['text'])
+    
+    
+    def rock_paper_scissors(self, user_choice):
+        bot_choice = random.choice(["rock", "paper", "scissors"])
+        if bot_choice == user_choice:
+            return "A tie, aw shucks!"
+        else:
+            # Winning combinations
+            if bot_choice == "rock" and user_choice == "scissors":
+                return "Yes! I beat you with rock! (I chose {})".format(bot_choice)
+            elif bot_choice == "paper" and user_choice == "rock":
+                return "Covering your rock with paper, you lose. (I chose {})".format(bot_choice)
+            elif bot_choice == "scissors" and user_choice == "paper":
+                return "Scissors cut paper, son. (I chose {})".format(bot_choice)
+            
+            # Losing combinations
+            elif bot_choice == "rock" and user_choice == "paper":
+                return "Wait, wait. Something beats rock? (I chose {})".format(bot_choice)
+            elif bot_choice == "paper" and user_choice == "scissors":
+                return "Damn those scissors to blazes. (I chose {})".format(bot_choice)
+            elif bot_choice == "scissors" and user_choice == "rock":
+                return "Why don't you take that rock and hit yourself with it? >:[ (I chose {})".format(bot_choice)
+            else:
+                return "I don't know that word! Try again!"

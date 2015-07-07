@@ -13,6 +13,13 @@ Installation
 * Create a `config.json` file (use `config.sample.json` as a reference).
 * Run vicbot.py (`[python] vicbot.py`).
 
+Notes
+-----
+
+For the YouTube video information module to work properly, you must have a Public API access key from a Google project.
+You can create one in https://developers.google.com. 
+After getting the key, add it to your config.json file under the key "youtube-key".
+
 Commands
 ---------
 
@@ -43,3 +50,4 @@ Commands
 | `!ignore user` | Makes the bot ignore any commands used by `user`.
 | `!unignore user` | Makes the bot accept any command used by `user`.
 | `!tell user message` | Sends a `message` to `user` the next time the bot sees them.
+| `!rps [rock|paper|scissors]` | Plays a game of Rock, Paper, Scissors with the bot.

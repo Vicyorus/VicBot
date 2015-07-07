@@ -56,7 +56,7 @@ class VicBot(chatbot.ChatBot):
         chatbot.ChatBot.__init__(self, config_file['user'], config_file['password'], wiki_name)
         self.command = command(self, config_file['user'], config_file['password'])
         self.last_updated = time.time()
-        self.logger_on = True
+        self.logger_on = False
         self.hello_status = True
         self.youtubeinfo = True
         self.twitterinfo = True
@@ -296,6 +296,11 @@ class VicBot(chatbot.ChatBot):
                         tell[tell_user] = [{'user': e.user, 'text': message}]
                     codecs.open('tell.json', 'w').write(json.dumps(tell))
                     c.send('{}: I will tell {} your message the next time I see him.'.format(e.user, tell_user))
+            
+            if msg.startswith('!rps '):
+                user_choice = e.text.split(' ')[1]
+                print user_choice
+                c.send(e.user + ": " + self.command.rock_paper_scissors(user_choice))
         else:
             pass
 

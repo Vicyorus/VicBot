@@ -47,6 +47,7 @@ running = True
 class Client(object):
     def __init__(self, username, password, site):
         self.wiki_path = site + "wikia.php?controller=Chat&format=json"
+        self.api_path = site + "api.php?action=query&meta=siteinfo&siprop=wikidesc&format=json"
         
         self.headers = {
             'User-Agent': 'vicbot v.2.0.0',
@@ -71,13 +72,15 @@ class Client(object):
         
        
         data = self.__wikia_request()
+        api_data = self.__wikia_api_request()
 
         #Set the settings values
         self.settings = {
             'chatkey': data['chatkey'],
-            'server': data['nodeInstance'],
-            'host': data["nodeHostname"],
-            'room': data["roomId"]
+            'server': data['chatServerHost'],
+            'host': data["chatServerHost"],
+            'room': data["roomId"],
+            'wgId': api_data["query"]["wikidesc"]["id"]
         }
 
         #Chat url
@@ -85,11 +88,12 @@ class Client(object):
         self.t = 0
         self.request_data = {
             'name': username,
+            'EIO': 2,
+            'transport': 'polling',
             'key': self.settings["chatkey"],
             'roomId': self.settings["room"],
-            'serverId': self.settings['server'],
-            'EIO': 2,
-            'transport': 'polling'
+            'serverId': self.settings['wgId'],
+            'wikiId': self.settings['wgId']
         }
 
         #Initial
@@ -176,6 +180,11 @@ class Client(object):
 
     def __wikia_request(self):
         response = self.opener.get(self.wiki_path)
+        content = json.loads(response.content)
+        return content
+
+    def __wikia_api_request(self):
+        response = self.opener.get(self.api_path)
         content = json.loads(response.content)
         return content
 

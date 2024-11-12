@@ -1,6 +1,8 @@
 VicBot
 ======
 
+**Project no longer in active development since they closed down Wikia chats.**
+
 A chat bot/logger for Wikia Chats built on Python 2.7
 
 This project is heavily influenced by [chatbot-rb](https://github.com/sactage/chatbot-rb) from [sactage](https://github.com/sactage) and uses a modified version of [hairr](https://github.com/hairr)'s [chatbot](https://github.com/hairr/chatbot) module as the client.
